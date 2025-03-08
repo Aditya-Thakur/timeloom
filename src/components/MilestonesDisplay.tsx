@@ -3,7 +3,7 @@ import React from 'react';
 import { Share2 } from 'lucide-react';
 import { MilestonesData } from './types';
 import MilestoneCard from './MilestoneCard';
-import SignificantMomentCard from './SignificantMomentCard';
+import LifeJourneyTimeline from './LifeJourneyTimeline';
 
 interface MilestonesDisplayProps {
   milestones: MilestonesData;
@@ -16,7 +16,7 @@ const MilestonesDisplay: React.FC<MilestonesDisplayProps> = ({ milestones }) => 
   };
 
   return (
-    <div className="max-w-4xl w-full mx-auto my-8 p-6">
+    <div className="w-full">
       <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Your Life in Numbers</h2>
@@ -33,6 +33,9 @@ const MilestonesDisplay: React.FC<MilestonesDisplayProps> = ({ milestones }) => 
         <p className="text-gray-700 mb-4">
           You have lived <span className="font-bold text-indigo-600">{milestones.currentDays.toLocaleString()}</span> days so far.
         </p>
+        
+        {/* Life Journey Timeline (Horizontal with SVGs) */}
+        <LifeJourneyTimeline milestones={milestones.momentsOfSignificance} />
         
         {/* Echoes of Time Section */}
         <div className="mt-10">
@@ -69,26 +72,6 @@ const MilestonesDisplay: React.FC<MilestonesDisplayProps> = ({ milestones }) => 
                 bgColor="bg-purple-50"
                 borderColor="border-purple-200"
                 textColor="text-purple-700"
-              />
-            ))}
-          </div>
-        </div>
-        
-        {/* Moments of Significance Section */}
-        <div className="mt-10">
-          <h3 className="text-xl font-semibold mb-4 flex items-center">
-            <span className="w-8 h-8 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center mr-2">3</span>
-            Moments of Significance
-          </h3>
-          <div className="space-y-4">
-            {milestones.momentsOfSignificance.map(milestone => (
-              <SignificantMomentCard 
-                key={milestone.id}
-                milestone={milestone}
-                accentColor="text-teal-600"
-                bgColor="bg-teal-50"
-                borderColor="border-teal-200"
-                textColor="text-teal-700"
               />
             ))}
           </div>

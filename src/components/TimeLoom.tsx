@@ -37,24 +37,24 @@ const TimeLoom: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center">
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center w-full">
       <Header />
       
       {!milestones && !isLoading && (
-        <DateEntryForm onSubmit={handleSubmit} />
+      <DateEntryForm onSubmit={handleSubmit} />
       )}
       
       {isLoading && (
-        <LoadingScreen loadingFacts={LOADING_FACTS} />
+      <LoadingScreen loadingFacts={LOADING_FACTS} />
       )}
       
       {milestones && !isLoading && (
-        <MilestonesDisplay milestones={milestones} />
+      <MilestonesDisplay milestones={milestones} />
       )}
       
       <EasterEggModal 
-        show={showEasterEgg} 
-        onClose={() => setShowEasterEgg(false)} 
+      show={showEasterEgg} 
+      onClose={() => setShowEasterEgg(false)} 
       />
       
       <Footer />
