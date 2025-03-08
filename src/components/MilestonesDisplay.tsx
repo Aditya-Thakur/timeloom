@@ -21,9 +21,9 @@ const MilestonesDisplay: React.FC<MilestonesDisplayProps> = ({ milestones, onCha
   return (
     <div className="w-full">
       <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <h2 className="text-2xl font-bold">Your Life in Numbers</h2>
-          <div className="flex space-x-2">
+          <div className="flex flex-wrap gap-2">
             <button 
               onClick={generateShareableImage} 
               className="flex items-center bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition duration-200"
