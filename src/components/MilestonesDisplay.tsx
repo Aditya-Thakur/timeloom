@@ -1,6 +1,6 @@
 // MilestonesDisplay.tsx
 import React from 'react';
-import { Share2 } from 'lucide-react';
+import { Share2, Calendar } from 'lucide-react';
 import { MilestonesData } from './types';
 import LifeJourneyTimeline from './LifeJourneyTimeline';
 import RhythmsOfUniverseTimeline from './RhythmsOfUniverseTimeline';
@@ -8,9 +8,10 @@ import { rhythmMilestones } from './constants';
 
 interface MilestonesDisplayProps {
   milestones: MilestonesData;
+  onChangeDOB: () => void;
 }
 
-const MilestonesDisplay: React.FC<MilestonesDisplayProps> = ({ milestones }) => {
+const MilestonesDisplay: React.FC<MilestonesDisplayProps> = ({ milestones, onChangeDOB }) => {
   // Generate shareable image (simulated)
   const generateShareableImage = (): void => {
     alert("Image generated! In a real implementation, this would create a downloadable image of your milestones.");
@@ -28,6 +29,13 @@ const MilestonesDisplay: React.FC<MilestonesDisplayProps> = ({ milestones }) => 
             >
               <Share2 className="h-4 w-4 mr-2" />
               Share
+            </button>
+            <button 
+              onClick={onChangeDOB} 
+              className="flex items-center bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition duration-200 border border-gray-300"
+            >
+              <Calendar className="h-4 w-4 mr-2" />
+              Change Date
             </button>
           </div>
         </div>

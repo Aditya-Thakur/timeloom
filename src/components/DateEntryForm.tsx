@@ -4,9 +4,10 @@ import { Calendar } from 'lucide-react';
 
 interface DateEntryFormProps {
   onSubmit: (dateOfBirth: string) => void;
+  isChangingDOB?: boolean;
 }
 
-const DateEntryForm: React.FC<DateEntryFormProps> = ({ onSubmit }) => {
+const DateEntryForm: React.FC<DateEntryFormProps> = ({ onSubmit, isChangingDOB = false }) => {
   const [dateOfBirth, setDateOfBirth] = useState<string>('');
   const [isValid, setIsValid] = useState<boolean>(true);
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -45,11 +46,13 @@ const DateEntryForm: React.FC<DateEntryFormProps> = ({ onSubmit }) => {
       <div className="flex justify-center mb-6">
         <Calendar className="h-12 w-12 text-indigo-500" />
       </div>
-      <h2 className="text-2xl font-bold text-center mb-6">Begin Your Timeline Journey</h2>
+      <h2 className="text-2xl font-bold text-center mb-6">
+        {isChangingDOB ? "Update Your Timeline" : "Begin Your Timeline Journey"}
+      </h2>
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
           <label className="block text-gray-700 mb-2" htmlFor="dob">
-            When were you born?
+            {isChangingDOB ? "Select a new date of birth:" : "When were you born?"}
           </label>
           <input
             type="date"
@@ -67,11 +70,10 @@ const DateEntryForm: React.FC<DateEntryFormProps> = ({ onSubmit }) => {
           type="submit"
           className="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg hover:bg-indigo-700 transition duration-200"
         >
-          Discover My Milestones
+          {isChangingDOB ? "Update My Milestones" : "Discover My Milestones"}
         </button>
       </form>
     </div>
-    
   );
 };
 
