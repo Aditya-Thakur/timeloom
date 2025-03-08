@@ -9,9 +9,10 @@ import { rhythmMilestones } from './constants';
 interface MilestonesDisplayProps {
   milestones: MilestonesData;
   onChangeDOB: () => void;
+  dateOfBirth: string; // Add dateOfBirth prop
 }
 
-const MilestonesDisplay: React.FC<MilestonesDisplayProps> = ({ milestones, onChangeDOB }) => {
+const MilestonesDisplay: React.FC<MilestonesDisplayProps> = ({ milestones, onChangeDOB, dateOfBirth }) => {
   // Generate shareable image (simulated)
   const generateShareableImage = (): void => {
     alert("Image generated! In a real implementation, this would create a downloadable image of your milestones.");
@@ -46,8 +47,11 @@ const MilestonesDisplay: React.FC<MilestonesDisplayProps> = ({ milestones, onCha
         {/* Life Journey Timeline (Horizontal with SVGs) */}
         <LifeJourneyTimeline milestones={milestones.momentsOfSignificance} />
         
-        {/* Rhythms of the Universe Section */}
-        <RhythmsOfUniverseTimeline milestones={rhythmMilestones} />
+        {/* Rhythms of the Universe Section - Pass date of birth */}
+        <RhythmsOfUniverseTimeline 
+          milestones={rhythmMilestones} 
+          dateOfBirth={dateOfBirth}
+        />
         
         {/* Fun Facts Section */}
         <div className="mt-10 p-4 bg-blue-50 rounded-lg border border-blue-200">

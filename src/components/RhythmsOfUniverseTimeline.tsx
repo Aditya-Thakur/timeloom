@@ -4,7 +4,16 @@ import { ChevronLeft, ChevronRight, X, Clock, Moon, Calendar,
   Wifi, Globe, Music, Activity, Heart, Star } from 'lucide-react';
 import { RhythmsOfUniverseTimelineProps } from './types';
 
-const RhythmsOfUniverseTimeline: React.FC<RhythmsOfUniverseTimelineProps> = ({ milestones }) => {
+interface RhythmCycleInfo {
+  completedCycles: number;
+  nextCycleDate: Date;
+  daysUntilNextCycle: number;
+}
+
+const RhythmsOfUniverseTimeline: React.FC<RhythmsOfUniverseTimelineProps & { dateOfBirth?: string }> = ({ 
+  milestones, 
+  dateOfBirth 
+}) => {
   const [visibleIndex, setVisibleIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -20,6 +29,76 @@ const RhythmsOfUniverseTimeline: React.FC<RhythmsOfUniverseTimelineProps> = ({ m
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+  
+  // Calculate cycle information based on DOB
+  const calculateCycleInfo = (cycleString: string): RhythmCycleInfo | null => {
+    if (!dateOfBirth) return null;
+    
+    const today = new Date();
+    const dob = new Date(dateOfBirth);
+    
+    // Get the number of hours, days, months, or years from the cycle string
+    let cycleInMilliseconds: number;
+    
+    if (cycleString === "Various" || cycleString === "Variable" || cycleString === "Daily to Generational" || cycleString === "Billions of years") {
+      // Cannot calculate for vague cycles
+      return null;
+    }
+    
+    // Extract numeric value and unit from cycle string
+    const match = cycleString.match(/(\d+\.?\d*)(?:\s+)?(hours?|days?|months?|years?)?/i);
+    if (!match) return null;
+    
+    const value = parseFloat(match[1]);
+    const unit = (match[2] || 'days').toLowerCase();
+    
+    // Convert unit to milliseconds
+    const millisecondsInHour = 60 * 60 * 1000;
+    const millisecondsInDay = 24 * millisecondsInHour;
+    const millisecondsInMonth = 30.44 * millisecondsInDay; // Average month
+    const millisecondsInYear = 365.25 * millisecondsInDay;
+    
+    switch (unit) {
+      case 'hour':
+      case 'hours':
+        cycleInMilliseconds = value * millisecondsInHour;
+        break;
+      case 'day':
+      case 'days':
+        cycleInMilliseconds = value * millisecondsInDay;
+        break;
+      case 'month':
+      case 'months':
+        cycleInMilliseconds = value * millisecondsInMonth;
+        break;
+      case 'year':
+      case 'years':
+        cycleInMilliseconds = value * millisecondsInYear;
+        break;
+      default:
+        // Default to days if unit is not specified
+        cycleInMilliseconds = value * millisecondsInDay;
+    }
+    
+    // Calculate age in milliseconds
+    const ageInMilliseconds = today.getTime() - dob.getTime();
+    
+    // Calculate number of completed cycles
+    const completedCycles = Math.floor(ageInMilliseconds / cycleInMilliseconds);
+    
+    // Calculate next cycle date
+    const nextCycleMilliseconds = dob.getTime() + ((completedCycles + 1) * cycleInMilliseconds);
+    const nextCycleDate = new Date(nextCycleMilliseconds);
+    
+    // Calculate days until next cycle
+    const daysUntilNextCycle = Math.ceil((nextCycleDate.getTime() - today.getTime()) / millisecondsInDay);
+    
+    return {
+      completedCycles,
+      nextCycleDate,
+      daysUntilNextCycle
+    };
+  };
   
   const goToPrevious = () => {
     setVisibleIndex(prev => Math.max(0, prev - 1));
@@ -37,6 +116,15 @@ const RhythmsOfUniverseTimeline: React.FC<RhythmsOfUniverseTimelineProps> = ({ m
   const closeModal = () => {
     setModalOpen(false);
     setSelectedMilestoneIndex(null);
+  };
+  
+  // Format a date to be more readable
+  const formatDate = (date: Date): string => {
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
   };
   
   // Color mapping for each rhythm type
@@ -93,6 +181,7 @@ const RhythmsOfUniverseTimeline: React.FC<RhythmsOfUniverseTimelineProps> = ({ m
     
     const milestone = milestones[selectedMilestoneIndex];
     const colors = getRhythmColors(milestone.iconType);
+    const cycleInfo = calculateCycleInfo(milestone.cycle);
     
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -124,6 +213,22 @@ const RhythmsOfUniverseTimeline: React.FC<RhythmsOfUniverseTimelineProps> = ({ m
               <p className={`text-md ${colors.text} font-medium mb-2`}>
                 Cycle: {milestone.cycle}
               </p>
+              
+              {/* Cycle information - only shown if DOB is provided */}
+              {cycleInfo && (
+                <div className={`${colors.bg} p-4 rounded-lg my-4`}>
+                  <h4 className={`font-medium ${colors.text} mb-3`}>Your Cycle Information</h4>
+                  <p className="text-gray-700 mb-2">
+                    <span className="font-medium">Completed Cycles:</span> {cycleInfo.completedCycles.toLocaleString()}
+                  </p>
+                  <p className="text-gray-700 mb-2">
+                    <span className="font-medium">Next Cycle Date:</span> {formatDate(cycleInfo.nextCycleDate)}
+                  </p>
+                  <p className="text-gray-700">
+                    <span className="font-medium">Days Until Next Cycle:</span> {cycleInfo.daysUntilNextCycle}
+                  </p>
+                </div>
+              )}
               
               {/* Tags */}
               <div className="flex flex-wrap gap-2 mb-4">
@@ -185,6 +290,7 @@ const RhythmsOfUniverseTimeline: React.FC<RhythmsOfUniverseTimelineProps> = ({ m
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {itemsToShow.map((milestone, index) => {
             const colors = getRhythmColors(milestone.iconType);
+            const cycleInfo = calculateCycleInfo(milestone.cycle);
             
             return (
               <div
@@ -199,15 +305,32 @@ const RhythmsOfUniverseTimeline: React.FC<RhythmsOfUniverseTimelineProps> = ({ m
                   <h4 className={`font-medium ${colors.text}`}>{milestone.title}</h4>
                 </div>
                 <p className={`text-sm ${colors.text} mb-2`}>{milestone.cycle}</p>
-                <p className="text-sm text-gray-600 mb-3">{milestone.description.substring(0, 100)}
-                  {milestone.description.length > 100 ? '...' : ''}
+                
+                {/* Add cycle information to card if available */}
+                {cycleInfo && (
+                  <div className="mb-3">
+                    <p className={`text-sm font-semibold ${colors.text}`}>
+                      {cycleInfo.completedCycles.toLocaleString()} cycles completed
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Next: {formatDate(cycleInfo.nextCycleDate)}
+                    </p>
+                  </div>
+                )}
+                
+                <p className="text-sm text-gray-600 mb-3">{milestone.description.substring(0, 80)}
+                  {milestone.description.length > 80 ? '...' : ''}
                 </p>
+                
                 <div className="flex flex-wrap gap-1 mt-1">
-                  {milestone.tags.map((tag, idx) => (
+                  {milestone.tags.slice(0, 2).map((tag, idx) => (
                     <span key={idx} className={`${colors.tagBg} ${colors.tagText} px-2 py-0.5 rounded-full text-xs`}>
                       {tag}
                     </span>
                   ))}
+                  {milestone.tags.length > 2 && (
+                    <span className={`${colors.text} text-xs`}>+{milestone.tags.length - 2}</span>
+                  )}
                 </div>
               </div>
             );
@@ -230,11 +353,12 @@ const RhythmsOfUniverseTimeline: React.FC<RhythmsOfUniverseTimelineProps> = ({ m
     );
   };
   
-  // Timeline View (Original Implementation)
+  // Timeline View
   const TimelineView = () => {
     if (isMobile) {
       const currentMilestone = milestones[visibleIndex];
       const colors = getRhythmColors(currentMilestone.iconType);
+      const cycleInfo = calculateCycleInfo(currentMilestone.cycle);
       
       return (
         <div>
@@ -274,10 +398,21 @@ const RhythmsOfUniverseTimeline: React.FC<RhythmsOfUniverseTimelineProps> = ({ m
                 {/* Milestone Point */}
                 <div className={`w-4 h-4 rounded-full mb-1 ${colors.text.replace('text', 'bg')}`}></div>
                 
-                {/* Title */}
+                {/* Title and Cycle Count */}
                 <div className={`text-lg font-bold ${colors.text}`}>
                   {currentMilestone.title}
                 </div>
+                
+                {cycleInfo && (
+                  <div className="text-center mt-1">
+                    <p className={`text-sm font-semibold ${colors.text}`}>
+                      {cycleInfo.completedCycles.toLocaleString()} cycles
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Next: {formatDate(cycleInfo.nextCycleDate)}
+                    </p>
+                  </div>
+                )}
                 
                 {/* Description & Tags */}
                 <div className="text-center">
@@ -324,6 +459,7 @@ const RhythmsOfUniverseTimeline: React.FC<RhythmsOfUniverseTimelineProps> = ({ m
           <div className="flex justify-between items-start relative z-10" style={{ minWidth: `${milestones.length * 150}px` }}>
             {milestones.map((milestone, index) => {
               const colors = getRhythmColors(milestone.iconType);
+              const cycleInfo = calculateCycleInfo(milestone.cycle);
               
               return (
                 <div key={milestone.id} className="flex flex-col items-center mx-4" style={{ minWidth: "140px" }}>
@@ -344,17 +480,29 @@ const RhythmsOfUniverseTimeline: React.FC<RhythmsOfUniverseTimelineProps> = ({ m
                     {milestone.title}
                   </div>
                   
+                  {/* Cycle Count */}
+                  {cycleInfo && (
+                    <div className="text-center mt-1">
+                      <p className={`text-xs font-semibold ${colors.text}`}>
+                        {cycleInfo.completedCycles.toLocaleString()} cycles
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Next: {formatDate(cycleInfo.nextCycleDate).split(',')[0]}
+                      </p>
+                    </div>
+                  )}
+                  
                   {/* Cycle & Tags */}
                   <div className="text-center">
                     <p className="text-xs text-gray-600 mb-1">{milestone.cycle}</p>
                     <div className="flex flex-wrap justify-center gap-1 mt-1">
-                      {milestone.tags.slice(0, 2).map((tag, idx) => (
+                      {milestone.tags.slice(0, 1).map((tag, idx) => (
                         <span key={idx} className={`${colors.tagBg} ${colors.tagText} px-2 py-0.5 rounded-full text-xs whitespace-nowrap`}>
                           {tag}
                         </span>
                       ))}
-                      {milestone.tags.length > 2 && (
-                        <span className={`${colors.text} text-xs`}>+{milestone.tags.length - 2}</span>
+                      {milestone.tags.length > 1 && (
+                        <span className={`${colors.text} text-xs`}>+{milestone.tags.length - 1}</span>
                       )}
                     </div>
                   </div>
@@ -398,9 +546,16 @@ const RhythmsOfUniverseTimeline: React.FC<RhythmsOfUniverseTimelineProps> = ({ m
         Rhythms of the Universe
       </h3>
       
-      <ViewToggle />
-      
-      {viewMode === 'cards' ? <CardView /> : <TimelineView />}
+      {dateOfBirth ? (
+        <>
+          <ViewToggle />
+          {viewMode === 'cards' ? <CardView /> : <TimelineView />}
+        </>
+      ) : (
+        <div className="text-center p-6 bg-gray-50 rounded-lg border border-gray-200">
+          <p className="text-gray-600">Please enter your date of birth to see your personal rhythm information.</p>
+        </div>
+      )}
       
       {modalOpen && <RhythmModal />}
     </div>

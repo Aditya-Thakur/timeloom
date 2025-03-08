@@ -15,6 +15,7 @@ const TimeLoom: React.FC = () => {
   const [milestones, setMilestones] = useState<MilestonesData | null>(null);
   const [showEasterEgg, setShowEasterEgg] = useState<boolean>(false);
   const [isChangingDOB, setIsChangingDOB] = useState<boolean>(false);
+  const [currentDOB, setCurrentDOB] = useState<string>('');
 
   // Check for saved DOB on component mount
   useEffect(() => {
@@ -32,6 +33,7 @@ const TimeLoom: React.FC = () => {
   const handleSubmit = (dob: string): void => {
     setIsLoading(true);
     setIsChangingDOB(false);
+    setCurrentDOB(dob);
     
     // Save DOB to local storage
     const savedDOBs = localStorage.getItem('userDOBHistory');
@@ -83,6 +85,7 @@ const TimeLoom: React.FC = () => {
       
       {milestones && !isLoading && !isChangingDOB && (
         <MilestonesDisplay 
+          dateOfBirth={currentDOB}
           milestones={milestones} 
           onChangeDOB={handleChangeDOB}
         />
