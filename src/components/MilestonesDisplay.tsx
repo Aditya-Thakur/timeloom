@@ -2,8 +2,9 @@
 import React from 'react';
 import { Share2 } from 'lucide-react';
 import { MilestonesData } from './types';
-import MilestoneCard from './MilestoneCard';
 import LifeJourneyTimeline from './LifeJourneyTimeline';
+import RhythmsOfUniverseTimeline from './RhythmsOfUniverseTimeline';
+import { rhythmMilestones } from './constants';
 
 interface MilestonesDisplayProps {
   milestones: MilestonesData;
@@ -31,51 +32,14 @@ const MilestonesDisplay: React.FC<MilestonesDisplayProps> = ({ milestones }) => 
           </div>
         </div>
         <p className="text-gray-700 mb-4">
-          You have lived <span className="font-bold text-indigo-600">{milestones.currentDays.toLocaleString()}</span> days so far.
+          You have lived <span className="font-bold text-indigo-600">{milestones.currentDays.toLocaleString()}</span> earth days so far.
         </p>
         
         {/* Life Journey Timeline (Horizontal with SVGs) */}
         <LifeJourneyTimeline milestones={milestones.momentsOfSignificance} />
         
-        {/* Echoes of Time Section */}
-        <div className="mt-10">
-          <h3 className="text-xl font-semibold mb-4 flex items-center">
-            <span className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mr-2">1</span>
-            Echoes of Time
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {milestones.echoesOfTime.slice(0, 9).map(milestone => (
-              <MilestoneCard 
-                key={milestone.id}
-                milestone={milestone}
-                accentColor="text-indigo-600"
-                bgColor="bg-indigo-50"
-                borderColor="border-indigo-200"
-                textColor="text-indigo-700"
-              />
-            ))}
-          </div>
-        </div>
-        
         {/* Rhythms of the Universe Section */}
-        <div className="mt-10">
-          <h3 className="text-xl font-semibold mb-4 flex items-center">
-            <span className="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mr-2">2</span>
-            Rhythms of the Universe
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {milestones.rhythmsOfUniverse.map(milestone => (
-              <MilestoneCard 
-                key={milestone.id}
-                milestone={milestone}
-                accentColor="text-purple-600"
-                bgColor="bg-purple-50"
-                borderColor="border-purple-200"
-                textColor="text-purple-700"
-              />
-            ))}
-          </div>
-        </div>
+        <RhythmsOfUniverseTimeline milestones={rhythmMilestones} />
         
         {/* Fun Facts Section */}
         <div className="mt-10 p-4 bg-blue-50 rounded-lg border border-blue-200">

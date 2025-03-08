@@ -15,3 +15,17 @@ export interface MilestonesData {
   currentDays: number;
   hasSpecialMilestone: boolean;
 }
+
+export interface RhythmMilestone {
+  id: string;
+  title: string;
+  description: string;
+  cycle: string;
+  iconType: 'daily' | 'monthly' | 'yearly' | 'cosmic' | 'biological' | 'technological' | 'social' | 'creative';
+  tags: string[];
+  goals: string[];
+}
+
+export interface RhythmsOfUniverseTimelineProps {
+  milestones: RhythmMilestone[];
+}

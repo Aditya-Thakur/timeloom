@@ -1,15 +1,63 @@
-// LifeJourneyTimeline.tsx (Mobile Enhancement)
+// LifeJourneyTimeline.tsx (Modal Enhancement)
 import React, { JSX, useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { Milestone } from './types';
 
 interface LifeJourneyTimelineProps {
   milestones: Milestone[];
 }
 
+// Define life goals for each life stage
+const lifeStageGoals: Record<number, string[]> = {
+  0: [
+    "First smile and laugh",
+    "Learning to crawl",
+    "First words spoken"
+  ],
+  1: [
+    "Learning to read",
+    "Making first friends",
+    "Developing independence"
+  ],
+  2: [
+    "Developing personal identity",
+    "Building deeper friendships",
+    "Exploring interests and passions"
+  ],
+  3: [
+    "Starting career journey",
+    "Building meaningful relationships",
+    "Financial independence"
+  ],
+  4: [
+    "Career advancement",
+    "Creating a family/home",
+    "Contributing to community"
+  ],
+  5: [
+    "Mentoring others",
+    "Work-life balance mastery",
+    "Legacy planning"
+  ],
+  6: [
+    "Sharing wisdom with younger generations",
+    "Pursuing postponed dreams",
+    "Finding purpose in retirement"
+  ],
+  7: [
+    "Reflecting on life accomplishments",
+    "Finding peace and contentment",
+    "Leaving a positive legacy"
+  ]
+};
+
 const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({ milestones }) => {
   const [visibleIndex, setVisibleIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  
+  // Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedMilestoneIndex, setSelectedMilestoneIndex] = useState<number | null>(null);
   
   // Sort milestones by days (ascending)
   const sortedMilestones = [...milestones].sort((a, b) => a.days - b.days);
@@ -32,6 +80,82 @@ const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({ milestones })
     setVisibleIndex(prev => Math.min(sortedMilestones.length - 1, prev + 1));
   };
   
+  const openModal = (index: number) => {
+    setSelectedMilestoneIndex(index);
+    setModalOpen(true);
+  };
+  
+  const closeModal = () => {
+    setModalOpen(false);
+    setSelectedMilestoneIndex(null);
+  };
+  
+  // Modal component
+  const MilestoneModal = () => {
+    if (selectedMilestoneIndex === null) return null;
+    
+    const milestone = sortedMilestones[selectedMilestoneIndex];
+    const goals = lifeStageGoals[selectedMilestoneIndex] || [];
+    
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-auto">
+          <div className="p-6">
+            {/* Header with close button */}
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-gray-900">
+                {milestone.description}
+              </h3>
+              <button 
+                onClick={closeModal}
+                className="text-gray-500 hover:text-gray-700 focus:outline-none"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            
+            {/* Life stage icon */}
+            <div className="flex justify-center my-4">
+              <div className={`text-teal-600 ${milestone.isPast ? '' : 'opacity-70'}`}>
+                {getLifeStageSVG(selectedMilestoneIndex, milestone.isPast, true)}
+              </div>
+            </div>
+            
+            {/* Milestone details */}
+            <div className="mb-6 text-center">
+              <p className="text-2xl font-bold text-teal-600 mb-1">
+                {milestone.days.toLocaleString()} days
+              </p>
+              <p className="text-md text-gray-600 mb-2">
+                {milestone.date}
+              </p>
+              {!milestone.isPast && milestone.daysUntil && (
+                <p className="text-sm text-gray-500">
+                  {milestone.daysUntil.toLocaleString()} days from now
+                </p>
+              )}
+            </div>
+            
+            {/* Life goals section */}
+            <div className="bg-teal-50 p-4 rounded-lg">
+              <h4 className="font-medium text-teal-700 mb-3">Life Milestones & Goals</h4>
+              <ul className="space-y-2">
+                {goals.map((goal, idx) => (
+                  <li key={idx} className="flex items-start">
+                    <div className="h-6 w-6 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center mr-2 flex-shrink-0 mt-0.5">
+                      {idx + 1}
+                    </div>
+                    <span className="text-gray-700">{goal}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
   // Mobile view (carousel style)
   if (isMobile) {
     const currentMilestone = sortedMilestones[visibleIndex];
@@ -39,7 +163,7 @@ const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({ milestones })
     return (
       <div className="mt-10">
         <h3 className="text-xl font-semibold mb-6 flex items-center">
-          <span className="w-8 h-8 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center mr-2">3</span>
+          <span className="w-8 h-8 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center mr-2">1</span>
           Moments of Significance
         </h3>
         
@@ -67,10 +191,14 @@ const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({ milestones })
           {/* Current Milestone */}
           <div className="flex justify-center items-start relative z-10">
             <div className="flex flex-col items-center">
-              {/* Life Stage SVG */}
-              <div className={`mb-2 ${currentMilestone.isPast ? 'text-teal-600' : 'text-gray-400'}`}>
+              {/* Clickable Life Stage SVG */}
+              <button 
+                onClick={() => openModal(visibleIndex)}
+                className={`mb-2 rounded p-1 hover:bg-teal-50 transition-colors ${currentMilestone.isPast ? 'text-teal-600' : 'text-gray-400'}`}
+                aria-label={`View details for ${currentMilestone.description}`}
+              >
                 {getLifeStageSVG(visibleIndex, currentMilestone.isPast)}
-              </div>
+              </button>
               
               {/* Milestone Point */}
               <div className={`w-4 h-4 rounded-full mb-1 ${currentMilestone.isPast ? 'bg-teal-500' : 'bg-gray-300'}`}></div>
@@ -107,6 +235,8 @@ const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({ milestones })
             ))}
           </div>
         </div>
+        
+        {modalOpen && <MilestoneModal />}
       </div>
     );
   }
@@ -115,7 +245,7 @@ const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({ milestones })
   return (
     <div className="mt-10">
       <h3 className="text-xl font-semibold mb-6 flex items-center">
-        <span className="w-8 h-8 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center mr-2">3</span>
+        <span className="w-8 h-8 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center mr-2">1</span>
         Moments of Significance
       </h3>
       
@@ -129,10 +259,14 @@ const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({ milestones })
           <div className="flex justify-between items-start relative z-10" style={{ minWidth: `${sortedMilestones.length * 130}px` }}>
             {sortedMilestones.map((milestone, index) => (
               <div key={milestone.id} className="flex flex-col items-center mx-4" style={{ minWidth: "120px" }}>
-                {/* Life Stage SVG */}
-                <div className={`mb-2 ${milestone.isPast ? 'text-teal-600' : 'text-gray-400'}`}>
+                {/* Clickable Life Stage SVG */}
+                <button 
+                  onClick={() => openModal(index)}
+                  className={`mb-2 rounded p-1 hover:bg-teal-50 transition-colors ${milestone.isPast ? 'text-teal-600' : 'text-gray-400'}`}
+                  aria-label={`View details for ${milestone.description}`}
+                >
                   {getLifeStageSVG(index, milestone.isPast)}
-                </div>
+                </button>
                 
                 {/* Milestone Point */}
                 <div className={`w-4 h-4 rounded-full mb-1 ${milestone.isPast ? 'bg-teal-500' : 'bg-gray-300'}`}></div>
@@ -159,19 +293,22 @@ const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({ milestones })
           </div>
         </div>
       </div>
+      
+      {modalOpen && <MilestoneModal />}
     </div>
   );
 };
 
 // Helper function to get the appropriate SVG based on the life stage
-function getLifeStageSVG(index: number, isPast: boolean): JSX.Element {
+function getLifeStageSVG(index: number, isPast: boolean, isModal = false): JSX.Element {
   const fillColor = isPast ? 'currentColor' : 'currentColor';
   const opacity = isPast ? '1' : '0.5';
+  const size = isModal ? '64' : '40'; // Larger size for modal display
   
   // Early childhood (baby/toddler)
   if (index === 0) {
     return (
-      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={fillColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={opacity}>
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={fillColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={opacity}>
         <circle cx="12" cy="9" r="5" />
         <path d="M8 9h8" />
         <path d="M12 14v7" />
@@ -184,7 +321,7 @@ function getLifeStageSVG(index: number, isPast: boolean): JSX.Element {
   // Child (elementary school)
   else if (index === 1) {
     return (
-      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={fillColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={opacity}>
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={fillColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={opacity}>
         <circle cx="12" cy="8" r="5" />
         <path d="M9 8h6" />
         <path d="M10 6h.01" />
@@ -198,7 +335,7 @@ function getLifeStageSVG(index: number, isPast: boolean): JSX.Element {
   // Teenager
   else if (index === 2) {
     return (
-      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={fillColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={opacity}>
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={fillColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={opacity}>
         <circle cx="12" cy="7" r="4" />
         <path d="M10 5h.01" />
         <path d="M14 5h.01" />
@@ -212,7 +349,7 @@ function getLifeStageSVG(index: number, isPast: boolean): JSX.Element {
   // Young adult
   else if (index === 3) {
     return (
-      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={fillColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={opacity}>
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={fillColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={opacity}>
         <circle cx="12" cy="6" r="4" />
         <path d="M10 4h.01" />
         <path d="M14 4h.01" />
@@ -225,7 +362,7 @@ function getLifeStageSVG(index: number, isPast: boolean): JSX.Element {
   // Adult (career/family)
   else if (index === 4) {
     return (
-      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={fillColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={opacity}>
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={fillColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={opacity}>
         <circle cx="12" cy="5" r="3" />
         <path d="M12 8v10" />
         <path d="M8 16h8" />
@@ -237,7 +374,7 @@ function getLifeStageSVG(index: number, isPast: boolean): JSX.Element {
   // Middle-aged
   else if (index === 5) {
     return (
-      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={fillColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={opacity}>
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={fillColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={opacity}>
         <circle cx="12" cy="5" r="3" />
         <path d="M10 3.5h.01" />
         <path d="M14 3.5h.01" />
@@ -250,7 +387,7 @@ function getLifeStageSVG(index: number, isPast: boolean): JSX.Element {
   // Older adult
   else if (index === 6) {
     return (
-      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={fillColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={opacity}>
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={fillColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={opacity}>
         <circle cx="12" cy="5" r="3" />
         <path d="M12 8v8" />
         <path d="M9 11h6" />
@@ -262,7 +399,7 @@ function getLifeStageSVG(index: number, isPast: boolean): JSX.Element {
   // Elderly/sage
   else {
     return (
-      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={fillColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={opacity}>
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={fillColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={opacity}>
         <circle cx="12" cy="5" r="3" />
         <path d="M10 3h.01" />
         <path d="M14 3h.01" />
