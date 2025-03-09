@@ -5,11 +5,12 @@ import { MilestonesData } from './types';
 import LifeJourneyTimeline from './LifeJourneyTimeline';
 import RhythmsOfUniverseTimeline from './RhythmsOfUniverseTimeline';
 import { rhythmMilestones } from './constants';
+import FunFactsComponent from './FunFactsComponent';
 
 interface MilestonesDisplayProps {
   milestones: MilestonesData;
   onChangeDOB: () => void;
-  dateOfBirth: string; // Add dateOfBirth prop
+  dateOfBirth: string; // Format: "YYYY-MM-DD"
 }
 
 const MilestonesDisplay: React.FC<MilestonesDisplayProps> = ({ milestones, onChangeDOB, dateOfBirth }) => {
@@ -17,6 +18,9 @@ const MilestonesDisplay: React.FC<MilestonesDisplayProps> = ({ milestones, onCha
   const generateShareableImage = (): void => {
     alert("Image generated! In a real implementation, this would create a downloadable image of your milestones.");
   };
+
+  // Define milestone days to show fun facts for
+  const milestoneDays = [1000, 10000, 25000, 36500]; // 1K, 10K, 25K days and ~100 years
 
   return (
     <div className="w-full">
@@ -53,13 +57,12 @@ const MilestonesDisplay: React.FC<MilestonesDisplayProps> = ({ milestones, onCha
           dateOfBirth={dateOfBirth}
         />
         
-        {/* Fun Facts Section */}
-        <div className="mt-10 p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <h3 className="text-xl font-semibold mb-2">Fun Facts</h3>
-          <p className="text-gray-700">
-            On your 10,000th day, the top song was likely playing on the radio, 
-            and a gallon of gas cost around $3.50. The world was a different place!
-          </p>
+        {/* Fun Facts Section - using our new component */}
+        <div className="mt-10">
+          <FunFactsComponent 
+            dateOfBirth={dateOfBirth} 
+            milestoneDays={milestoneDays} 
+          />
         </div>
       </div>
     </div>
