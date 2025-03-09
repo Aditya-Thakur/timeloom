@@ -40,7 +40,7 @@ const FunFactsComponent: React.FC<FunFactsProps> = ({ dateOfBirth, milestoneDays
   }, []);
 
   // Fetch fun fact using a combination of APIs to get the best result
-  const fetchFunFact = useCallback(async (date: string, day: number, index: number) => {
+  const fetchFunFact = useCallback(async (date: string, _day: number, index: number) => {
     try {
       // Format date components for API calls
       const currDate = new Date(date)
@@ -78,10 +78,10 @@ const FunFactsComponent: React.FC<FunFactsProps> = ({ dateOfBirth, milestoneDays
         const historyData = await historyResponse.json();
         
         if (historyData.data.Events && historyData.data.Events.length > 0) {
-          let events = historyData.data.Events;
+          const events = historyData.data.Events;
           
           // Filter for positive events
-          let positiveEvents = events.filter(event => 
+          const positiveEvents = events.filter((event: { text: string; }) => 
             isPositiveFact(event.text)
           );
           
@@ -89,7 +89,7 @@ const FunFactsComponent: React.FC<FunFactsProps> = ({ dateOfBirth, milestoneDays
           const filteredEvents = positiveEvents.length > 0 ? positiveEvents : events;
           
           // Try to find an event from the specific year if possible
-          const eventFromYear = filteredEvents.find(event => event.year === year);
+          const eventFromYear = filteredEvents.find((event: { year: number; }) => event.year === year);
           
           // If no event from the exact year, get a random one
           const event = eventFromYear || filteredEvents[Math.floor(Math.random() * filteredEvents.length)];
@@ -111,22 +111,22 @@ const FunFactsComponent: React.FC<FunFactsProps> = ({ dateOfBirth, milestoneDays
       }
       
       // Final fallback: Wikipedia API
-      const wikiResponse = await fetch(`https://en.wikipedia.org/api/rest_v1/feed/onthisday/events/${parseInt(month, 10)}/${parseInt(dayOfMonth, 10)}`);
+      const wikiResponse = await fetch(`https://en.wikipedia.org/api/rest_v1/feed/onthisday/events/${month.toString()}/${dayOfMonth.toString()}`);
       
       if (wikiResponse.ok) {
         const wikiData = await wikiResponse.json();
         
         if (wikiData.events && wikiData.events.length > 0) {
           // Filter for positive events if possible
-          let events = wikiData.events;
-          let positiveEvents = events.filter(event => isPositiveFact(event.text));
+          const events = wikiData.events;
+          const positiveEvents = events.filter((event: { text: string; }) => isPositiveFact(event.text));
           
           // Use positive events if we found any, otherwise use all events
           const filteredEvents = positiveEvents.length > 0 ? positiveEvents : events;
           
           // Try to find events closer to the target year
           const sortedEvents = [...filteredEvents].sort((a, b) => {
-            return Math.abs(parseInt(a.year) - parseInt(year)) - Math.abs(parseInt(b.year) - parseInt(year));
+            return Math.abs(parseInt(a.year, 10) - year) - Math.abs(parseInt(b.year, 10) - year);
           });
           
           const event = sortedEvents[0]; // Get the closest match by year
@@ -170,7 +170,6 @@ const FunFactsComponent: React.FC<FunFactsProps> = ({ dateOfBirth, milestoneDays
   useEffect(() => {
     if (!isInitialized) {
       const today = new Date();
-      const birthDate = new Date(dateOfBirth);
       
       // Initialize facts array with loading state
       const initialFacts: MilestoneFact[] = [
