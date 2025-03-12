@@ -1,7 +1,7 @@
 // ClimateFunFacts.tsx
 import React, { useEffect, useState } from 'react';
 import { Lightbulb, ExternalLink } from 'lucide-react';
-import { getClimateDataForYear, getRandomClimateFact } from './climateData';
+import { getClimateDataForYear, getRandomClimateFact } from '../constants/climateData';
 
 interface ClimateFunFactsProps {
   milestoneDays: number[];

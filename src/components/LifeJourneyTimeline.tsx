@@ -1,8 +1,8 @@
 // LifeJourneyTimeline.tsx (Modal Enhancement with Climate Impact)
 import React, { JSX, useState } from 'react';
 import { ChevronLeft, ChevronRight, X, Thermometer } from 'lucide-react';
-import { Milestone } from './types';
-import ClimateImpactOverlay from './ClimateImpactOverlay';
+import { Milestone } from './constants/types';
+import ClimateImpactOverlay from './climate/ClimateImpactOverlay';
 
 interface LifeJourneyTimelineProps {
   milestones: Milestone[];
@@ -53,48 +53,48 @@ const lifeStageGoals: Record<number, string[]> = {
   ]
 };
 
-const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({ 
-  milestones, 
+const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({
+  milestones,
   showClimateImpact = true // Default to showing climate impact
 }) => {
   const [visibleIndex, setVisibleIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
-  
+
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedMilestoneIndex, setSelectedMilestoneIndex] = useState<number | null>(null);
-  
+
   // Sort milestones by days (ascending)
   const sortedMilestones = [...milestones].sort((a, b) => a.days - b.days);
-  
+
   React.useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-  
+
   const goToPrevious = () => {
     setVisibleIndex(prev => Math.max(0, prev - 1));
   };
-  
+
   const goToNext = () => {
     setVisibleIndex(prev => Math.min(sortedMilestones.length - 1, prev + 1));
   };
-  
+
   const openModal = (index: number) => {
     setSelectedMilestoneIndex(index);
     setModalOpen(true);
   };
-  
+
   const closeModal = () => {
     setModalOpen(false);
     setSelectedMilestoneIndex(null);
   };
-  
+
   // Extract year from the date format (MM/DD/YYYY)
   const getYearFromDateString = (dateString: string): number => {
     if (dateString != "") {
@@ -102,15 +102,15 @@ const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({
     }
     return new Date().getFullYear(); // Default to current year if parsing fails
   };
-  
+
   // Modal component
   const MilestoneModal = () => {
     if (selectedMilestoneIndex === null) return null;
-    
+
     const milestone = sortedMilestones[selectedMilestoneIndex];
     const goals = lifeStageGoals[selectedMilestoneIndex] || [];
     const year = getYearFromDateString(milestone.date);
-    
+
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-auto">
@@ -120,21 +120,21 @@ const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({
               <h3 className="text-xl font-bold text-gray-900">
                 {milestone.description}
               </h3>
-              <button 
+              <button
                 onClick={closeModal}
                 className="text-gray-500 hover:text-gray-700 focus:outline-none"
               >
                 <X size={24} />
               </button>
             </div>
-            
+
             {/* Life stage icon */}
             <div className="flex justify-center my-4">
               <div className={`text-teal-600 ${milestone.isPast ? '' : 'opacity-70'}`}>
                 {getLifeStageSVG(selectedMilestoneIndex, milestone.isPast, true)}
               </div>
             </div>
-            
+
             {/* Milestone details */}
             <div className="mb-6 text-center">
               <p className="text-2xl font-bold text-teal-600 mb-1">
@@ -148,7 +148,7 @@ const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({
                   {milestone.daysUntil.toLocaleString()} days from now
                 </p>
               )}
-              
+
               {/* Climate impact information in modal */}
               {showClimateImpact && (
                 <div className="mt-4 bg-amber-50 p-4 rounded-lg text-left">
@@ -157,7 +157,7 @@ const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({
                 </div>
               )}
             </div>
-            
+
             {/* Life goals section */}
             <div className="bg-teal-50 p-4 rounded-lg">
               <h4 className="font-medium text-teal-700 mb-3">Life Milestones & Goals</h4>
@@ -177,12 +177,12 @@ const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({
       </div>
     );
   };
-  
+
   // Mobile view (carousel style)
   if (isMobile) {
     const currentMilestone = sortedMilestones[visibleIndex];
     const year = getYearFromDateString(currentMilestone.date);
-    
+
     return (
       <div className="mt-10">
         <h3 className="text-xl font-semibold mb-6 flex items-center">
@@ -194,48 +194,48 @@ const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({
             </span>
           )}
         </h3>
-        
+
         <div className="relative px-8">
           {/* Timeline Line */}
           <div className="absolute top-24 left-10 right-10 h-1 bg-teal-200 z-0"></div>
-          
+
           {/* Navigation Buttons */}
-          <button 
-            onClick={goToPrevious} 
+          <button
+            onClick={goToPrevious}
             disabled={visibleIndex === 0}
             className={`absolute left-0 top-20 p-1 rounded-full ${visibleIndex === 0 ? 'text-gray-300' : 'text-teal-600 hover:bg-teal-100'}`}
           >
             <ChevronLeft size={24} />
           </button>
-          
-          <button 
-            onClick={goToNext} 
+
+          <button
+            onClick={goToNext}
             disabled={visibleIndex === sortedMilestones.length - 1}
             className={`absolute right-0 top-20 p-1 rounded-full ${visibleIndex === sortedMilestones.length - 1 ? 'text-gray-300' : 'text-teal-600 hover:bg-teal-100'}`}
           >
             <ChevronRight size={24} />
           </button>
-          
+
           {/* Current Milestone */}
           <div className="flex justify-center items-start relative z-10">
             <div className="flex flex-col items-center">
               {/* Clickable Life Stage SVG */}
-              <button 
+              <button
                 onClick={() => openModal(visibleIndex)}
                 className={`mb-2 rounded p-1 hover:bg-teal-50 transition-colors ${currentMilestone.isPast ? 'text-teal-600' : 'text-gray-400'}`}
                 aria-label={`View details for ${currentMilestone.description}`}
               >
                 {getLifeStageSVG(visibleIndex, currentMilestone.isPast)}
               </button>
-              
+
               {/* Milestone Point */}
               <div className={`w-4 h-4 rounded-full mb-1 ${currentMilestone.isPast ? 'bg-teal-500' : 'bg-gray-300'}`}></div>
-              
+
               {/* Days */}
               <div className={`text-lg font-bold ${currentMilestone.isPast ? 'text-teal-600' : 'text-gray-500'}`}>
                 {currentMilestone.days.toLocaleString()}
               </div>
-              
+
               {/* Description */}
               <div className="text-center">
                 <p className="text-md font-medium">{currentMilestone.description}</p>
@@ -247,10 +247,10 @@ const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({
                     {currentMilestone.daysUntil.toLocaleString()} days from now
                   </p>
                 )}
-                
+
                 {/* Climate Impact Overlay for mobile view */}
                 {showClimateImpact && (
-                  <ClimateImpactOverlay 
+                  <ClimateImpactOverlay
                     year={year}
                     isPast={currentMilestone.isPast}
                   />
@@ -258,11 +258,11 @@ const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({
               </div>
             </div>
           </div>
-          
+
           {/* Progress Dots */}
           <div className="flex justify-center mt-6 gap-1">
             {sortedMilestones.map((_, index) => (
-              <button 
+              <button
                 key={index}
                 onClick={() => setVisibleIndex(index)}
                 className={`w-2 h-2 rounded-full ${index === visibleIndex ? 'bg-teal-600' : 'bg-gray-300'}`}
@@ -271,12 +271,12 @@ const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({
             ))}
           </div>
         </div>
-        
+
         {modalOpen && <MilestoneModal />}
       </div>
     );
   }
-  
+
   // Desktop view (full timeline)
   return (
     <div className="mt-10">
@@ -289,13 +289,13 @@ const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({
           </span>
         )}
       </h3>
-      
+
       <div className="relative p-4 overflow-x-auto">
         {/* Timeline Container with horizontal scrolling for smaller screens */}
         <div className="min-w-max">
           {/* Timeline Line */}
           <div className="absolute top-24 left-16 right-16 h-1 bg-teal-200 z-0"></div>
-          
+
           {/* Timeline Items */}
           <div className="flex justify-between items-start relative z-10" style={{ minWidth: `${sortedMilestones.length * 130}px` }}>
             {sortedMilestones.map((milestone, index) => {
@@ -303,22 +303,22 @@ const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({
               return (
                 <div key={milestone.id} className="flex flex-col items-center mx-4" style={{ minWidth: "120px" }}>
                   {/* Clickable Life Stage SVG */}
-                  <button 
+                  <button
                     onClick={() => openModal(index)}
                     className={`mb-2 rounded p-1 hover:bg-teal-50 transition-colors ${milestone.isPast ? 'text-teal-600' : 'text-gray-400'}`}
                     aria-label={`View details for ${milestone.description}`}
                   >
                     {getLifeStageSVG(index, milestone.isPast)}
                   </button>
-                  
+
                   {/* Milestone Point */}
                   <div className={`w-4 h-4 rounded-full mb-1 ${milestone.isPast ? 'bg-teal-500' : 'bg-gray-300'}`}></div>
-                  
+
                   {/* Days */}
                   <div className={`text-lg font-bold ${milestone.isPast ? 'text-teal-600' : 'text-gray-500'}`}>
                     {milestone.days.toLocaleString()}
                   </div>
-                  
+
                   {/* Description */}
                   <div className="text-center">
                     <p className="text-sm font-medium">{milestone.description}</p>
@@ -330,10 +330,10 @@ const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({
                         {milestone.daysUntil.toLocaleString()} days from now
                       </p>
                     )}
-                    
+
                     {/* Climate Impact Overlay for desktop view */}
                     {showClimateImpact && (
-                      <ClimateImpactOverlay 
+                      <ClimateImpactOverlay
                         year={year}
                         isPast={milestone.isPast}
                       />
@@ -345,7 +345,7 @@ const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({
           </div>
         </div>
       </div>
-      
+
       {modalOpen && <MilestoneModal />}
     </div>
   );
@@ -356,7 +356,7 @@ function getLifeStageSVG(index: number, isPast: boolean, isModal = false): JSX.E
   const fillColor = isPast ? 'currentColor' : 'currentColor';
   const opacity = isPast ? '1' : '0.5';
   const size = isModal ? '64' : '40'; // Larger size for modal display
-  
+
   // Early childhood (baby/toddler)
   if (index === 0) {
     return (

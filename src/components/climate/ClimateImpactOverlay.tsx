@@ -1,7 +1,7 @@
 // ClimateImpactOverlay.tsx
 import React, { useState } from 'react';
 import { Info, X } from 'lucide-react';
-import { getClimateDataForYear } from './climateData';
+import { getClimateDataForYear } from '../constants/climateData';
 
 interface ClimateImpactOverlayProps {
   year: number;
@@ -11,14 +11,14 @@ interface ClimateImpactOverlayProps {
 const ClimateImpactOverlay: React.FC<ClimateImpactOverlayProps> = ({ year, isPast }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const climateData = getClimateDataForYear(year);
-  
+
   return (
     <div className="mt-2">
       <div className={`text-xs ${isPast ? 'text-amber-600' : 'text-amber-400'} flex items-center`}>
         <span className="mr-1">
           CO₂: {climateData.co2} ppm
         </span>
-        <button 
+        <button
           onClick={() => setIsExpanded(true)}
           className="rounded-full p-1 hover:bg-amber-50"
           aria-label="View climate impact details"
@@ -26,7 +26,7 @@ const ClimateImpactOverlay: React.FC<ClimateImpactOverlayProps> = ({ year, isPas
           <Info size={12} />
         </button>
       </div>
-      
+
       {isExpanded && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-auto">
@@ -36,14 +36,14 @@ const ClimateImpactOverlay: React.FC<ClimateImpactOverlayProps> = ({ year, isPas
                 <h3 className="text-xl font-bold text-gray-900">
                   Climate Impact: {year}
                 </h3>
-                <button 
+                <button
                   onClick={() => setIsExpanded(false)}
                   className="text-gray-500 hover:text-gray-700 focus:outline-none"
                 >
                   <X size={24} />
                 </button>
               </div>
-              
+
               <div className="space-y-4">
                 <div className="bg-amber-50 p-4 rounded-lg">
                   <h4 className="font-medium text-amber-700 mb-2">Key Climate Indicators</h4>
@@ -62,7 +62,7 @@ const ClimateImpactOverlay: React.FC<ClimateImpactOverlayProps> = ({ year, isPas
                     </div>
                   </div>
                 </div>
-                
+
                 {climateData.events.length > 0 && (
                   <div>
                     <h4 className="font-medium text-gray-800 mb-2">Major Climate Events</h4>
@@ -73,15 +73,15 @@ const ClimateImpactOverlay: React.FC<ClimateImpactOverlayProps> = ({ year, isPas
                     </ul>
                   </div>
                 )}
-                
+
                 <div className="text-sm text-gray-500 mt-4">
                   <p>Data sourced from NOAA, NASA, and IPCC reports. These values represent global averages.</p>
                 </div>
-                
+
                 <div className="pt-2 border-t border-gray-200">
                   <p className="text-sm text-gray-700">
-                    {isPast ? 
-                      "This represents the climate conditions you've already experienced." : 
+                    {isPast ?
+                      "This represents the climate conditions you've already experienced." :
                       "This represents projected climate conditions you may experience in the future."}
                   </p>
                 </div>

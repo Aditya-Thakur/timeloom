@@ -7,8 +7,8 @@ import LoadingScreen from './LoadingScreen';
 import MilestonesDisplay from './MilestonesDisplay';
 import EasterEggModal from './EasterEggModal';
 import { calculateMilestones } from './MilestoneCalculator';
-import { MilestonesData } from './types';
-import { LOADING_FACTS } from './constants';
+import { MilestonesData } from './constants/types';
+import { LOADING_FACTS } from './constants/constants';
 
 const TimeLoom: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -34,23 +34,23 @@ const TimeLoom: React.FC = () => {
     setIsLoading(true);
     setIsChangingDOB(false);
     setCurrentDOB(dob);
-    
+
     // Save DOB to local storage
     const savedDOBs = localStorage.getItem('userDOBHistory');
     const dobHistory = savedDOBs ? JSON.parse(savedDOBs) : [];
-    
+
     // Add new DOB if it's different from the last one
     if (dobHistory.length === 0 || dobHistory[dobHistory.length - 1] !== dob) {
       dobHistory.push(dob);
       localStorage.setItem('userDOBHistory', JSON.stringify(dobHistory));
     }
-    
+
     // Simulate calculation time for better UX
     setTimeout(() => {
       const calculatedMilestones = calculateMilestones(dob);
       setMilestones(calculatedMilestones);
       setIsLoading(false);
-      
+
       if (calculatedMilestones.hasSpecialMilestone) {
         setTimeout(() => {
           setShowEasterEgg(true);
@@ -71,31 +71,31 @@ const TimeLoom: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center w-full">
       <Header />
-      
+
       {(!milestones || isChangingDOB) && !isLoading && (
-        <DateEntryForm 
-          onSubmit={handleSubmit} 
+        <DateEntryForm
+          onSubmit={handleSubmit}
           isChangingDOB={isChangingDOB}
         />
       )}
-      
+
       {isLoading && (
         <LoadingScreen loadingFacts={LOADING_FACTS} />
       )}
-      
+
       {milestones && !isLoading && !isChangingDOB && (
-        <MilestonesDisplay 
+        <MilestonesDisplay
           dateOfBirth={currentDOB}
-          milestones={milestones} 
+          milestones={milestones}
           onChangeDOB={handleChangeDOB}
         />
       )}
-      
-      <EasterEggModal 
-        show={showEasterEgg} 
-        onClose={() => setShowEasterEgg(false)} 
+
+      <EasterEggModal
+        show={showEasterEgg}
+        onClose={() => setShowEasterEgg(false)}
       />
-      
+
       <Footer />
     </div>
   );

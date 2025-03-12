@@ -1,6 +1,6 @@
 // SignificantMomentCard.tsx
 import React from 'react';
-import { Milestone } from './types';
+import { Milestone } from './constants/types';
 
 interface SignificantMomentCardProps {
   milestone: Milestone;
@@ -10,14 +10,14 @@ interface SignificantMomentCardProps {
   textColor: string;
 }
 
-const SignificantMomentCard: React.FC<SignificantMomentCardProps> = ({ 
-  milestone, 
-  accentColor, 
-  bgColor, 
+const SignificantMomentCard: React.FC<SignificantMomentCardProps> = ({
+  milestone,
+  accentColor,
+  bgColor,
   borderColor,
   textColor
 }) => (
-  <div 
+  <div
     className={`p-4 rounded-lg border flex justify-between items-center ${milestone.isPast ? `${bgColor} ${borderColor}` : 'bg-gray-50 border-gray-200'}`}
   >
     <div>

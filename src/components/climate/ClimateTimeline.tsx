@@ -1,7 +1,7 @@
 // ClimateTimeline.tsx
 import React, { useState, useEffect } from 'react';
 import { AlertTriangle, TrendingUp, Droplets, Activity } from 'lucide-react';
-import { majorClimateEvents, getClimateDataForYear, getFutureProjection } from './climateData';
+import { majorClimateEvents, getClimateDataForYear, getFutureProjection } from '../constants/climateData';
 
 interface ClimateTimelineProps {
   dateOfBirth: string; // Format: "YYYY-MM-DD"

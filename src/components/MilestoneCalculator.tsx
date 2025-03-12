@@ -1,5 +1,5 @@
 // MilestoneCalculator.ts
-import { MilestonesData, Milestone } from './types';
+import { MilestonesData, Milestone } from './constants/types';
 
 export function calculateMilestones(dob: string): MilestonesData {
   const birthDate = new Date(dob);

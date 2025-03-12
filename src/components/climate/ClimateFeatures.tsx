@@ -10,8 +10,8 @@ interface ClimateFeaturesProps {
   currentDays: number;
 }
 
-const ClimateFeatures: React.FC<ClimateFeaturesProps> = ({ 
-  dateOfBirth, 
+const ClimateFeatures: React.FC<ClimateFeaturesProps> = ({
+  dateOfBirth,
   milestoneDays,
   currentDays
 }) => {
@@ -25,9 +25,9 @@ const ClimateFeatures: React.FC<ClimateFeaturesProps> = ({
     }
     return sortedMilestones[sortedMilestones.length - 1] + 1000; // If all milestones passed, add 1000 days
   };
-  
+
   const nextMilestone = getNextMilestone();
-  
+
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
       <div className="mb-8">
@@ -36,17 +36,17 @@ const ClimateFeatures: React.FC<ClimateFeaturesProps> = ({
           Understand how climate change has and will shape your lifetime, and what actions you can take to make a difference.
         </p>
       </div>
-      
+
       {/* Climate Timeline Component */}
       <ClimateTimeline dateOfBirth={dateOfBirth} />
-      
+
       {/* Climate Action Component */}
       <ClimateActionComponent milestoneDays={nextMilestone} />
-      
+
       {/* Climate Fun Facts Component */}
-      <ClimateFunFacts 
-        milestoneDays={milestoneDays} 
-        dateOfBirth={dateOfBirth} 
+      <ClimateFunFacts
+        milestoneDays={milestoneDays}
+        dateOfBirth={dateOfBirth}
       />
     </div>
   );
