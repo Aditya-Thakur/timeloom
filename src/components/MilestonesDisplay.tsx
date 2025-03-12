@@ -1,11 +1,12 @@
-// MilestonesDisplay.tsx
-import React from 'react';
-import { Share2, Calendar } from 'lucide-react';
+// MilestonesDisplay.tsx (Updated with Climate Features)
+import React, { useState } from 'react';
+import { Share2, Calendar, Thermometer } from 'lucide-react';
 import { MilestonesData } from './types';
-import LifeJourneyTimeline from './LifeJourneyTimeline';
+import LifeJourneyTimeline from './LifeJourneyTimeline'; // Use the original import path
 import RhythmsOfUniverseTimeline from './RhythmsOfUniverseTimeline';
 import { rhythmMilestones } from './constants';
 import FunFactsComponent from './FunFactsComponent';
+import ClimateFeatures from './ClimateFeatures'; // Import our new climate features component
 
 interface MilestonesDisplayProps {
   milestones: MilestonesData;
@@ -14,6 +15,9 @@ interface MilestonesDisplayProps {
 }
 
 const MilestonesDisplay: React.FC<MilestonesDisplayProps> = ({ milestones, onChangeDOB, dateOfBirth }) => {
+  // State for climate features toggle
+  const [showClimateFeatures, setShowClimateFeatures] = useState(true);
+  
   // Generate shareable image (simulated)
   const generateShareableImage = (): void => {
     alert("Image generated! In a real implementation, this would create a downloadable image of your milestones.");
@@ -42,14 +46,28 @@ const MilestonesDisplay: React.FC<MilestonesDisplayProps> = ({ milestones, onCha
               <Calendar className="h-4 w-4 mr-2" />
               Change Date
             </button>
+            <button 
+              onClick={() => setShowClimateFeatures(!showClimateFeatures)} 
+              className={`flex items-center py-2 px-4 rounded-lg transition duration-200 ${
+                showClimateFeatures 
+                  ? 'bg-amber-600 text-white hover:bg-amber-700' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+              }`}
+            >
+              <Thermometer className="h-4 w-4 mr-2" />
+              Climate Impact
+            </button>
           </div>
         </div>
         <p className="text-gray-700 mb-4">
           You have lived <span className="font-bold text-indigo-600">{milestones.currentDays.toLocaleString()}</span> earth days so far.
         </p>
         
-        {/* Life Journey Timeline (Horizontal with SVGs) */}
-        <LifeJourneyTimeline milestones={milestones.momentsOfSignificance} />
+        {/* Life Journey Timeline (Horizontal with SVGs) with climate impact toggle */}
+        <LifeJourneyTimeline 
+          milestones={milestones.momentsOfSignificance} 
+          showClimateImpact={showClimateFeatures}
+        />
         
         {/* Rhythms of the Universe Section - Pass date of birth */}
         <RhythmsOfUniverseTimeline 
@@ -65,6 +83,15 @@ const MilestonesDisplay: React.FC<MilestonesDisplayProps> = ({ milestones, onCha
           />
         </div>
       </div>
+      
+      {/* Climate Features Section - Only show when enabled */}
+      {showClimateFeatures && (
+        <ClimateFeatures 
+          dateOfBirth={dateOfBirth}
+          milestoneDays={milestoneDays}
+          currentDays={milestones.currentDays}
+        />
+      )}
     </div>
   );
 };

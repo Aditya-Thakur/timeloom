@@ -1,10 +1,12 @@
-// LifeJourneyTimeline.tsx (Modal Enhancement)
+// LifeJourneyTimeline.tsx (Modal Enhancement with Climate Impact)
 import React, { JSX, useState } from 'react';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Thermometer } from 'lucide-react';
 import { Milestone } from './types';
+import ClimateImpactOverlay from './ClimateImpactOverlay';
 
 interface LifeJourneyTimelineProps {
   milestones: Milestone[];
+  showClimateImpact?: boolean; // Optional prop to toggle climate impact display
 }
 
 // Define life goals for each life stage
@@ -51,7 +53,10 @@ const lifeStageGoals: Record<number, string[]> = {
   ]
 };
 
-const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({ milestones }) => {
+const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({ 
+  milestones, 
+  showClimateImpact = true // Default to showing climate impact
+}) => {
   const [visibleIndex, setVisibleIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   
@@ -90,12 +95,22 @@ const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({ milestones })
     setSelectedMilestoneIndex(null);
   };
   
+  // Extract year from the date format (MM/DD/YYYY)
+  const getYearFromDateString = (dateString: string): number => {
+    const parts = dateString.split('/');
+    if (parts.length === 3) {
+      return parseInt(parts[2], 10);
+    }
+    return new Date().getFullYear(); // Default to current year if parsing fails
+  };
+  
   // Modal component
   const MilestoneModal = () => {
     if (selectedMilestoneIndex === null) return null;
     
     const milestone = sortedMilestones[selectedMilestoneIndex];
     const goals = lifeStageGoals[selectedMilestoneIndex] || [];
+    const year = getYearFromDateString(milestone.date);
     
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -134,6 +149,14 @@ const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({ milestones })
                   {milestone.daysUntil.toLocaleString()} days from now
                 </p>
               )}
+              
+              {/* Climate impact information in modal */}
+              {showClimateImpact && (
+                <div className="mt-4 bg-amber-50 p-4 rounded-lg text-left">
+                  <h4 className="font-medium text-amber-700 mb-2">Climate Impact</h4>
+                  <ClimateImpactOverlay year={year} isPast={milestone.isPast} />
+                </div>
+              )}
             </div>
             
             {/* Life goals section */}
@@ -159,12 +182,18 @@ const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({ milestones })
   // Mobile view (carousel style)
   if (isMobile) {
     const currentMilestone = sortedMilestones[visibleIndex];
+    const year = getYearFromDateString(currentMilestone.date);
     
     return (
       <div className="mt-10">
         <h3 className="text-xl font-semibold mb-6 flex items-center">
           <span className="w-8 h-8 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center mr-2">1</span>
           Moments of Significance
+          {showClimateImpact && (
+            <span className="ml-2 bg-amber-100 text-amber-600 px-2 py-1 rounded-md text-xs font-medium flex items-center">
+              <Thermometer size={12} className="mr-1" /> Climate Impact
+            </span>
+          )}
         </h3>
         
         <div className="relative px-8">
@@ -219,6 +248,14 @@ const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({ milestones })
                     {currentMilestone.daysUntil.toLocaleString()} days from now
                   </p>
                 )}
+                
+                {/* Climate Impact Overlay for mobile view */}
+                {showClimateImpact && (
+                  <ClimateImpactOverlay 
+                    year={year}
+                    isPast={currentMilestone.isPast}
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -247,6 +284,11 @@ const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({ milestones })
       <h3 className="text-xl font-semibold mb-6 flex items-center">
         <span className="w-8 h-8 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center mr-2">1</span>
         Moments of Significance
+        {showClimateImpact && (
+          <span className="ml-2 bg-amber-100 text-amber-600 px-2 py-1 rounded-md text-xs font-medium flex items-center">
+            <Thermometer size={12} className="mr-1" /> Climate Impact
+          </span>
+        )}
       </h3>
       
       <div className="relative p-4 overflow-x-auto">
@@ -257,39 +299,50 @@ const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({ milestones })
           
           {/* Timeline Items */}
           <div className="flex justify-between items-start relative z-10" style={{ minWidth: `${sortedMilestones.length * 130}px` }}>
-            {sortedMilestones.map((milestone, index) => (
-              <div key={milestone.id} className="flex flex-col items-center mx-4" style={{ minWidth: "120px" }}>
-                {/* Clickable Life Stage SVG */}
-                <button 
-                  onClick={() => openModal(index)}
-                  className={`mb-2 rounded p-1 hover:bg-teal-50 transition-colors ${milestone.isPast ? 'text-teal-600' : 'text-gray-400'}`}
-                  aria-label={`View details for ${milestone.description}`}
-                >
-                  {getLifeStageSVG(index, milestone.isPast)}
-                </button>
-                
-                {/* Milestone Point */}
-                <div className={`w-4 h-4 rounded-full mb-1 ${milestone.isPast ? 'bg-teal-500' : 'bg-gray-300'}`}></div>
-                
-                {/* Days */}
-                <div className={`text-lg font-bold ${milestone.isPast ? 'text-teal-600' : 'text-gray-500'}`}>
-                  {milestone.days.toLocaleString()}
-                </div>
-                
-                {/* Description */}
-                <div className="text-center">
-                  <p className="text-sm font-medium">{milestone.description}</p>
-                  <p className={`text-xs ${milestone.isPast ? 'text-teal-700' : 'text-gray-500'}`}>
-                    {milestone.date}
-                  </p>
-                  {!milestone.isPast && milestone.daysUntil && (
-                    <p className="text-xs text-gray-500">
-                      {milestone.daysUntil.toLocaleString()} days from now
+            {sortedMilestones.map((milestone, index) => {
+              const year = getYearFromDateString(milestone.date);
+              return (
+                <div key={milestone.id} className="flex flex-col items-center mx-4" style={{ minWidth: "120px" }}>
+                  {/* Clickable Life Stage SVG */}
+                  <button 
+                    onClick={() => openModal(index)}
+                    className={`mb-2 rounded p-1 hover:bg-teal-50 transition-colors ${milestone.isPast ? 'text-teal-600' : 'text-gray-400'}`}
+                    aria-label={`View details for ${milestone.description}`}
+                  >
+                    {getLifeStageSVG(index, milestone.isPast)}
+                  </button>
+                  
+                  {/* Milestone Point */}
+                  <div className={`w-4 h-4 rounded-full mb-1 ${milestone.isPast ? 'bg-teal-500' : 'bg-gray-300'}`}></div>
+                  
+                  {/* Days */}
+                  <div className={`text-lg font-bold ${milestone.isPast ? 'text-teal-600' : 'text-gray-500'}`}>
+                    {milestone.days.toLocaleString()}
+                  </div>
+                  
+                  {/* Description */}
+                  <div className="text-center">
+                    <p className="text-sm font-medium">{milestone.description}</p>
+                    <p className={`text-xs ${milestone.isPast ? 'text-teal-700' : 'text-gray-500'}`}>
+                      {milestone.date}
                     </p>
-                  )}
+                    {!milestone.isPast && milestone.daysUntil && (
+                      <p className="text-xs text-gray-500">
+                        {milestone.daysUntil.toLocaleString()} days from now
+                      </p>
+                    )}
+                    
+                    {/* Climate Impact Overlay for desktop view */}
+                    {showClimateImpact && (
+                      <ClimateImpactOverlay 
+                        year={year}
+                        isPast={milestone.isPast}
+                      />
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
