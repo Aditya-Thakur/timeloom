@@ -97,9 +97,8 @@ const LifeJourneyTimeline: React.FC<LifeJourneyTimelineProps> = ({
   
   // Extract year from the date format (MM/DD/YYYY)
   const getYearFromDateString = (dateString: string): number => {
-    const parts = dateString.split('/');
-    if (parts.length === 3) {
-      return parseInt(parts[2], 10);
+    if (dateString != "") {
+      return new Date(dateString).getFullYear();
     }
     return new Date().getFullYear(); // Default to current year if parsing fails
   };
