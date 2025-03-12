@@ -2,34 +2,44 @@ import React, { useEffect, useState } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
-// Firebase Config (Replace with your credentials)
+// Firebase Config using Vite environment variables
 const firebaseConfig = {
-  apiKey: "AIzaSyCdHYqFA6Zq9d5LyfSne79HwJ8F0iaPDQQ",
-  authDomain: "timeloom-c6bb8.firebaseapp.com",
-  projectId: "timeloom-c6bb8",
-  storageBucket: "timeloom-c6bb8.firebasestorage.app",
-  messagingSenderId: "930867455862",
-  appId: "1:930867455862:web:1c18bd729f5d49996f7c57",
-  measurementId: "G-3R11LSW8W5"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// Initialize Firebase only if credentials are available
+const app = import.meta.env.VITE_FIREBASE_API_KEY ? initializeApp(firebaseConfig) : null;
+const db = app ? getFirestore(app) : null;
 
 const Footer: React.FC = () => {
   const [visitCount, setVisitCount] = useState<number>(0);
 
   useEffect(() => {
     const incrementVisit = async () => {
-      const visitRef = doc(db, "analytics", "visitorCount");
-      const visitSnap = await getDoc(visitRef);
-      if (visitSnap.exists()) {
-        const newCount = visitSnap.data().count + 1;
-        await updateDoc(visitRef, { count: newCount });
-        setVisitCount(newCount);
-      } else {
-        await setDoc(visitRef, { count: 1 });
-        setVisitCount(1);
+      if (!db) {
+        console.error("Firebase not initialized properly");
+        return;
+      }
+      
+      try {
+        const visitRef = doc(db, "analytics", "visitorCount");
+        const visitSnap = await getDoc(visitRef);
+        if (visitSnap.exists()) {
+          const newCount = visitSnap.data().count + 1;
+          await updateDoc(visitRef, { count: newCount });
+          setVisitCount(newCount);
+        } else {
+          await setDoc(visitRef, { count: 1 });
+          setVisitCount(1);
+        }
+      } catch (error) {
+        console.error("Error updating visitor count:", error);
       }
     };
 
