@@ -7,7 +7,7 @@ import html2canvas from 'html2canvas';
  * @returns Promise with the image URL or null
  */
 export const generateImageFromRef = async (
-  ref: React.RefObject<HTMLDivElement>,
+  ref: React.RefObject<HTMLDivElement | null>,
   setIsGenerating?: React.Dispatch<React.SetStateAction<boolean>>
 ): Promise<string | null> => {
   if (!ref.current) return null;

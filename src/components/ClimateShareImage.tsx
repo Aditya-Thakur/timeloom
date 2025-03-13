@@ -1,5 +1,5 @@
 // ClimateShareImage.tsx - Component for generating climate share images
-import React, { forwardRef } from 'react';
+import { forwardRef, ForwardedRef } from 'react';
 import { getClimateDataForYear } from './constants/climateData';
 
 interface ClimateShareImageProps {
@@ -7,7 +7,7 @@ interface ClimateShareImageProps {
 }
 
 const ClimateShareImage = forwardRef<HTMLDivElement, ClimateShareImageProps>(
-  ({ dateOfBirth }, ref) => {
+  ({ dateOfBirth }, ref: ForwardedRef<HTMLDivElement>) => {
     // Calculate birth year
     const birthYear = new Date(dateOfBirth).getFullYear();
     

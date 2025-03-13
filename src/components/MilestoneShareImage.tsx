@@ -1,5 +1,5 @@
 // MilestoneShareImage.tsx - Component for generating milestone share images
-import React, { forwardRef } from 'react';
+import { forwardRef, ForwardedRef } from 'react';
 import { MilestonesData } from './constants/types';
 import LifeStageSVG from './LifeStageSVG';
 
@@ -8,7 +8,7 @@ interface MilestoneShareImageProps {
 }
 
 const MilestoneShareImage = forwardRef<HTMLDivElement, MilestoneShareImageProps>(
-  ({ milestones }, ref) => {
+  ({ milestones }, ref: ForwardedRef<HTMLDivElement>) => {
     return (
       <div 
         ref={ref} 
