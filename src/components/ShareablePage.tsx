@@ -33,8 +33,10 @@ const ShareablePage: React.FC<ShareablePageProps> = ({
   // Generate current image based on active tab
   const generateCurrentImage = async () => {
     const ref = activeTab === 'milestones' ? milestonesImageRef : climateImageRef;
-    const imageUrl = await generateImageFromRef(ref, setIsGenerating);
-    setShareableUrl(imageUrl);
+    if (ref) {
+      const imageUrl = await generateImageFromRef(ref, setIsGenerating);
+      setShareableUrl(imageUrl);
+    }
   };
 
   return (
