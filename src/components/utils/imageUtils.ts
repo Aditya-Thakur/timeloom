@@ -32,7 +32,7 @@ export const generateImageFromRef = async (
                element.classList.contains('no-export');
       },
       // Critical for SVG rendering
-      onclone: (documentClone, elementClone) => {
+      onclone: (elementClone) => {
         // Fix SVGs by ensuring they have explicit dimensions
         const svgs = elementClone.querySelectorAll('svg');
         svgs.forEach(svg => {
