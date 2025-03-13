@@ -1,4 +1,4 @@
-// TimeLoom.tsx (Updated to support the ShareableImages feature)
+// TimeLoom.tsx (Updated to support the new ShareablePage feature)
 import React, { useState, useEffect } from 'react';
 import Header from './Header';
 import Footer from './Footer';
@@ -72,29 +72,31 @@ const TimeLoom: React.FC = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col items-center w-full">
       <Header />
 
-      {(!milestones || isChangingDOB) && !isLoading && (
-        <DateEntryForm
-          onSubmit={handleSubmit}
-          isChangingDOB={isChangingDOB}
+      <div className="container mx-auto px-4 py-8 flex-grow">
+        {(!milestones || isChangingDOB) && !isLoading && (
+          <DateEntryForm
+            onSubmit={handleSubmit}
+            isChangingDOB={isChangingDOB}
+          />
+        )}
+
+        {isLoading && (
+          <LoadingScreen loadingFacts={LOADING_FACTS} />
+        )}
+
+        {milestones && !isLoading && !isChangingDOB && (
+          <MilestonesDisplay
+            dateOfBirth={currentDOB}
+            milestones={milestones}
+            onChangeDOB={handleChangeDOB}
+          />
+        )}
+
+        <EasterEggModal
+          show={showEasterEgg}
+          onClose={() => setShowEasterEgg(false)}
         />
-      )}
-
-      {isLoading && (
-        <LoadingScreen loadingFacts={LOADING_FACTS} />
-      )}
-
-      {milestones && !isLoading && !isChangingDOB && (
-        <MilestonesDisplay
-          dateOfBirth={currentDOB}
-          milestones={milestones}
-          onChangeDOB={handleChangeDOB}
-        />
-      )}
-
-      <EasterEggModal
-        show={showEasterEgg}
-        onClose={() => setShowEasterEgg(false)}
-      />
+      </div>
 
       <Footer currentDOB={currentDOB} />
     </div>

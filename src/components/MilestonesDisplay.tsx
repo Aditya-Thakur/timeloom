@@ -1,13 +1,13 @@
-// MilestonesDisplay.tsx (Updated with Climate Features)
+// MilestonesDisplay.tsx (Updated with ShareablePage)
 import React, { useState } from 'react';
 import { Share2, Calendar, Thermometer } from 'lucide-react';
 import { MilestonesData } from './constants/types';
-import LifeJourneyTimeline from './LifeJourneyTimeline'; // Use the original import path
+import LifeJourneyTimeline from './LifeJourneyTimeline'; 
 import RhythmsOfUniverseTimeline from './RhythmsOfUniverseTimeline';
 import { rhythmMilestones } from './constants/constants';
 import FunFactsComponent from './FunFactsComponent';
-import ClimateFeatures from './climate/ClimateFeatures'; // Import our new climate features component
-import ShareableImages from './ShareableImages';
+import ClimateFeatures from './climate/ClimateFeatures';
+import ShareablePage from './ShareablePage';
 
 interface MilestonesDisplayProps {
   milestones: MilestonesData;
@@ -18,14 +18,26 @@ interface MilestonesDisplayProps {
 const MilestonesDisplay: React.FC<MilestonesDisplayProps> = ({ milestones, onChangeDOB, dateOfBirth }) => {
   // State for climate features toggle
   const [showClimateFeatures, setShowClimateFeatures] = useState(true);
-  const [showShareModal, setShowShareModal] = useState(false);
-  // Generate shareable image (simulated)
+  const [showSharePage, setShowSharePage] = useState(false);
+
+  // Generate shareable image - now navigates to share page
   const generateShareableImage = (): void => {
-    setShowShareModal(true);
+    setShowSharePage(true);
   };
 
   // Define milestone days to show fun facts for
   const milestoneDays = [1000, 10000, 25000, 36500]; // 1K, 10K, 25K days and ~100 years
+
+  // If share page is active, show it instead of the normal content
+  if (showSharePage) {
+    return (
+      <ShareablePage
+        milestones={milestones}
+        dateOfBirth={dateOfBirth}
+        onClose={() => setShowSharePage(false)}
+      />
+    );
+  }
 
   return (
     <div className="w-full">
@@ -92,13 +104,6 @@ const MilestonesDisplay: React.FC<MilestonesDisplayProps> = ({ milestones, onCha
           currentDays={milestones.currentDays}
         />
       )}
-       {/* Shareable Images Modal */}
-       <ShareableImages
-        isOpen={showShareModal}
-        onClose={() => setShowShareModal(false)}
-        milestones={milestones}
-        dateOfBirth={dateOfBirth}
-      />
     </div>
   );
 };
