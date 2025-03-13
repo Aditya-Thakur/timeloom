@@ -18,10 +18,30 @@ export const generateImageFromRef = async (
     // Add a slight delay to ensure styles are applied
     await new Promise(resolve => setTimeout(resolve, 100));
     
-    const canvas = await html2canvas(ref.current, {
+    // Make a clone of the element to modify colors without affecting the UI
+    const clone = ref.current.cloneNode(true) as HTMLElement;
+    
+    // Find and replace problematic color functions (oklch) with fallback colors
+    const elementsWithStyles = clone.querySelectorAll('[style*="oklch"]');
+    elementsWithStyles.forEach((element) => {
+      const el = element as HTMLElement;
+      const style = el.getAttribute('style');
+      if (style && style.includes('oklch')) {
+        // Replace oklch with a safe fallback (hex or rgb)
+        const newStyle = style.replace(/oklch\([^)]+\)/g, '#6366f1'); // indigo-500 as fallback
+        el.setAttribute('style', newStyle);
+      }
+    });
+    
+    // Also check for classes that might use oklch colors via Tailwind
+    // This is a basic solution - a more comprehensive approach would map specific classes
+    
+    const canvas = await html2canvas(clone, {
       scale: 2, // Higher quality
       backgroundColor: null,
-      logging: false
+      logging: false,
+      useCORS: true,
+      allowTaint: true
     });
     
     const imageUrl = canvas.toDataURL('image/png');

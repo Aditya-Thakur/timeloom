@@ -46,23 +46,38 @@ const ShareControls: React.FC<ShareControlsProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6">
+    <div className="rounded-lg shadow-sm p-6" style={{ backgroundColor: 'white' }}>
       <div className="mb-4">
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Share Your Image</h3>
-        <p className="text-gray-600 text-sm">
+        <h3 className="text-lg font-medium mb-2" style={{ color: '#111827' }}>Share Your Image</h3>
+        <p className="text-sm" style={{ color: '#4b5563' }}>
           Download your personalized image or share it directly on social media.
         </p>
       </div>
       
       {isGenerating ? (
         <div className="flex justify-center p-6">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2" 
+            style={{ 
+              borderTopColor: '#4f46e5', 
+              borderBottomColor: '#4f46e5', 
+              borderLeftColor: 'transparent',
+              borderRightColor: 'transparent',
+              borderStyle: 'solid'
+            }}>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <button
             onClick={handleDownload}
-            className="flex flex-col items-center justify-center gap-2 p-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+            className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg transition-colors"
+            style={{ 
+              backgroundColor: '#f3f4f6',
+              color: '#374151',
+              transition: 'background-color 0.2s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e5e7eb'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
           >
             <Download size={24} />
             <span className="text-sm font-medium">Download</span>
@@ -70,7 +85,14 @@ const ShareControls: React.FC<ShareControlsProps> = ({
           
           <button
             onClick={() => handleShare('instagram')}
-            className="flex flex-col items-center justify-center gap-2 p-4 bg-gradient-to-br from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-lg transition-colors"
+            className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg transition-colors"
+            style={{ 
+              background: 'linear-gradient(to bottom right, #8b5cf6, #ec4899)',
+              color: 'white',
+              transition: 'opacity 0.2s' 
+            }}
+            onMouseOver={(e) => e.currentTarget.style.opacity = '0.9'}
+            onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
           >
             <Instagram size={24} />
             <span className="text-sm font-medium">Instagram</span>
@@ -78,7 +100,14 @@ const ShareControls: React.FC<ShareControlsProps> = ({
           
           <button
             onClick={() => handleShare('facebook')}
-            className="flex flex-col items-center justify-center gap-2 p-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg transition-colors"
+            style={{ 
+              backgroundColor: '#2563eb',
+              color: 'white',
+              transition: 'background-color 0.2s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1d4ed8'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
           >
             <Facebook size={24} />
             <span className="text-sm font-medium">Facebook</span>
@@ -86,7 +115,14 @@ const ShareControls: React.FC<ShareControlsProps> = ({
           
           <button
             onClick={() => handleShare('twitter')}
-            className="flex flex-col items-center justify-center gap-2 p-4 bg-blue-400 hover:bg-blue-500 text-white rounded-lg transition-colors"
+            className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg transition-colors"
+            style={{ 
+              backgroundColor: '#60a5fa',
+              color: 'white',
+              transition: 'background-color 0.2s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#60a5fa'}
           >
             <Twitter size={24} />
             <span className="text-sm font-medium">Twitter</span>
@@ -94,7 +130,14 @@ const ShareControls: React.FC<ShareControlsProps> = ({
           
           <button
             onClick={() => handleShare('whatsapp')}
-            className="flex flex-col items-center justify-center gap-2 p-4 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
+            className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg transition-colors"
+            style={{ 
+              backgroundColor: '#10b981',
+              color: 'white',
+              transition: 'background-color 0.2s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#059669'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#10b981'}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-message-circle">
               <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />

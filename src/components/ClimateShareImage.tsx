@@ -40,11 +40,12 @@ const ClimateShareImage = forwardRef<HTMLDivElement, ClimateShareImageProps>(
       <div 
         ref={ref} 
         className="w-full max-w-lg p-6 bg-gradient-to-br from-amber-50 to-orange-100 rounded-lg border-2 border-amber-200 shadow-lg"
+        style={{ background: 'linear-gradient(to bottom right, #fffbeb, #ffedd5)' }} // Using standard linear-gradient
       >
         <div className="flex justify-between items-start mb-4">
           <div>
-            <h3 className="text-2xl font-bold text-amber-800">My Climate Timeline</h3>
-            <p className="text-amber-600">
+            <h3 className="text-2xl font-bold text-amber-800" style={{ color: '#92400e' }}>My Climate Timeline</h3>
+            <p className="text-amber-600" style={{ color: '#d97706' }}>
               From {birthYear} to {new Date().getFullYear() + 80}
             </p>
           </div>
@@ -59,25 +60,25 @@ const ClimateShareImage = forwardRef<HTMLDivElement, ClimateShareImageProps>(
         
         <div className="space-y-6">
           {/* CO2 Graph - Fixed positioning issues */}
-          <div className="bg-white bg-opacity-70 rounded-lg p-4">
-            <h4 className="font-bold text-amber-700 mb-2">CO₂ Concentration Over Your Lifetime</h4>
+          <div className="bg-white bg-opacity-70 rounded-lg p-4" style={{ backgroundColor: 'rgba(255, 255, 255, 0.7)' }}>
+            <h4 className="font-bold text-amber-700 mb-2" style={{ color: '#b45309' }}>CO₂ Concentration Over Your Lifetime</h4>
             <div className="h-40 relative mb-4"> {/* Increased height and added margin */}
               {/* Y-axis */}
               <div className="absolute left-0 top-0 bottom-0 w-10 flex flex-col justify-between items-end pr-1">
-                <span className="text-xs text-gray-500">650 ppm</span>
-                <span className="text-xs text-gray-500">500 ppm</span>
-                <span className="text-xs text-gray-500">350 ppm</span>
-                <span className="text-xs text-gray-500">300 ppm</span>
+                <span className="text-xs text-gray-500" style={{ color: '#6b7280' }}>650 ppm</span>
+                <span className="text-xs text-gray-500" style={{ color: '#6b7280' }}>500 ppm</span>
+                <span className="text-xs text-gray-500" style={{ color: '#6b7280' }}>350 ppm</span>
+                <span className="text-xs text-gray-500" style={{ color: '#6b7280' }}>300 ppm</span>
               </div>
               
               {/* Graph area */}
               <div className="absolute left-10 right-0 top-0 bottom-8"> {/* Added bottom space for x-axis labels */}
                 {/* Horizontal grid lines */}
                 <div className="absolute w-full h-full flex flex-col justify-between">
-                  <div className="border-t border-gray-200 w-full"></div>
-                  <div className="border-t border-gray-200 w-full"></div>
-                  <div className="border-t border-gray-200 w-full"></div>
-                  <div className="border-t border-gray-200 w-full"></div>
+                  <div className="border-t border-gray-200 w-full" style={{ borderTopColor: '#e5e7eb' }}></div>
+                  <div className="border-t border-gray-200 w-full" style={{ borderTopColor: '#e5e7eb' }}></div>
+                  <div className="border-t border-gray-200 w-full" style={{ borderTopColor: '#e5e7eb' }}></div>
+                  <div className="border-t border-gray-200 w-full" style={{ borderTopColor: '#e5e7eb' }}></div>
                 </div>
                 
                 {/* Graph line - Fixed SVG positioning */}
@@ -105,8 +106,11 @@ const ClimateShareImage = forwardRef<HTMLDivElement, ClimateShareImageProps>(
               {/* X-axis labels */}
               <div className="absolute left-10 right-0 bottom-0 w-full flex justify-between">
                 {timelineYears.map((year, i) => (
-                  <div key={i} className="text-xs text-gray-500 transform -translate-x-1/2" style={{ 
-                    left: `${i * (100 / (timelineYears.length - 1))}%`
+                  <div key={i} className="text-xs text-gray-500" style={{ 
+                    color: '#6b7280',
+                    position: 'absolute',
+                    left: `${i * (100 / (timelineYears.length - 1))}%`,
+                    transform: 'translateX(-50%)'
                   }}>
                     {year}
                   </div>
@@ -120,19 +124,19 @@ const ClimateShareImage = forwardRef<HTMLDivElement, ClimateShareImageProps>(
             {timelineYears.slice(0, 3).map((year, idx) => {
               const data = getClimateDataForYear(year);
               return (
-                <div key={idx} className="bg-white bg-opacity-70 rounded-lg p-3">
-                  <h5 className="text-sm font-medium text-amber-700">{year}</h5>
+                <div key={idx} className="bg-white bg-opacity-70 rounded-lg p-3" style={{ backgroundColor: 'rgba(255, 255, 255, 0.7)' }}>
+                  <h5 className="text-sm font-medium text-amber-700" style={{ color: '#b45309' }}>{year}</h5>
                   <div className="mt-2 space-y-1 text-xs">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">CO₂:</span>
+                      <span className="text-gray-600" style={{ color: '#4b5563' }}>CO₂:</span>
                       <span className="font-medium">{data.co2} ppm</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Temp:</span>
+                      <span className="text-gray-600" style={{ color: '#4b5563' }}>Temp:</span>
                       <span className="font-medium">+{data.temperature.toFixed(1)}°C</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Sea Level:</span>
+                      <span className="text-gray-600" style={{ color: '#4b5563' }}>Sea Level:</span>
                       <span className="font-medium">{data.seaLevel} cm</span>
                     </div>
                   </div>
@@ -142,15 +146,15 @@ const ClimateShareImage = forwardRef<HTMLDivElement, ClimateShareImageProps>(
           </div>
           
           {/* Call to Action */}
-          <div className="bg-amber-100 rounded-lg p-3">
-            <h4 className="text-sm font-bold text-amber-800 mb-1">Climate Action</h4>
-            <p className="text-xs text-amber-700">
+          <div className="bg-amber-100 rounded-lg p-3" style={{ backgroundColor: '#fef3c7' }}>
+            <h4 className="text-sm font-bold text-amber-800 mb-1" style={{ color: '#92400e' }}>Climate Action</h4>
+            <p className="text-xs text-amber-700" style={{ color: '#b45309' }}>
               Taking action today can help mitigate climate change impacts. Every choice matters for future generations.
             </p>
           </div>
         </div>
         
-        <div className="mt-4 text-right text-xs text-gray-500">
+        <div className="mt-4 text-right text-xs text-gray-500" style={{ color: '#6b7280' }}>
           Generated with TimeLoom • timeloom.com
         </div>
       </div>
