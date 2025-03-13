@@ -1,4 +1,4 @@
-// TimeLoom.tsx
+// TimeLoom.tsx (Updated to support the ShareableImages feature)
 import React, { useState, useEffect } from 'react';
 import Header from './Header';
 import Footer from './Footer';

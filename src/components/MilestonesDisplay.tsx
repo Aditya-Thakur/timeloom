@@ -7,6 +7,7 @@ import RhythmsOfUniverseTimeline from './RhythmsOfUniverseTimeline';
 import { rhythmMilestones } from './constants/constants';
 import FunFactsComponent from './FunFactsComponent';
 import ClimateFeatures from './climate/ClimateFeatures'; // Import our new climate features component
+import ShareableImages from './ShareableImages';
 
 interface MilestonesDisplayProps {
   milestones: MilestonesData;
@@ -17,10 +18,10 @@ interface MilestonesDisplayProps {
 const MilestonesDisplay: React.FC<MilestonesDisplayProps> = ({ milestones, onChangeDOB, dateOfBirth }) => {
   // State for climate features toggle
   const [showClimateFeatures, setShowClimateFeatures] = useState(true);
-
+  const [showShareModal, setShowShareModal] = useState(false);
   // Generate shareable image (simulated)
   const generateShareableImage = (): void => {
-    alert("Image generated! In a real implementation, this would create a downloadable image of your milestones.");
+    setShowShareModal(true);
   };
 
   // Define milestone days to show fun facts for
@@ -91,6 +92,13 @@ const MilestonesDisplay: React.FC<MilestonesDisplayProps> = ({ milestones, onCha
           currentDays={milestones.currentDays}
         />
       )}
+       {/* Shareable Images Modal */}
+       <ShareableImages
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        milestones={milestones}
+        dateOfBirth={dateOfBirth}
+      />
     </div>
   );
 };
