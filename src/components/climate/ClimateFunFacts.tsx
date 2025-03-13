@@ -50,7 +50,7 @@ const ClimateFunFacts: React.FC<ClimateFunFactsProps> = ({ milestoneDays, dateOf
     <div className="mt-10">
       <h3 className="text-xl font-semibold mb-6 flex items-center">
         <span className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-2">5</span>
-        Climate Fun Facts
+        Climate Facts
       </h3>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

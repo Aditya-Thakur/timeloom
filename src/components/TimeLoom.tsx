@@ -96,7 +96,7 @@ const TimeLoom: React.FC = () => {
         onClose={() => setShowEasterEgg(false)}
       />
 
-      <Footer />
+      <Footer currentDOB={currentDOB} />
     </div>
   );
 };

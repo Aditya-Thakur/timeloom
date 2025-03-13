@@ -211,7 +211,7 @@ export const climateActionRecommendations: ClimateActionRecommendation[] = [
   }
 ];
 
-// Climate fun facts that can be displayed at different milestones
+// Climate facts that can be displayed at different milestones
 export const climateFunFacts: string[] = [
   "The average person in the US generates about 16 tons of CO₂ annually - that's equivalent to driving a car around the Earth's equator 1.6 times!",
   "If the Greenland Ice Sheet were to melt completely, global sea levels would rise by about 7 meters (23 feet).",
