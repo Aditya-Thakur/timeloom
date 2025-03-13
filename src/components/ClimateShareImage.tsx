@@ -1,4 +1,4 @@
-// ClimateShareImage.tsx - Component for generating climate share images
+// ClimateShareImage.tsx - Improved component for better rendering
 import { forwardRef, ForwardedRef } from 'react';
 import { getClimateDataForYear } from './constants/climateData';
 
@@ -25,20 +25,29 @@ const ClimateShareImage = forwardRef<HTMLDivElement, ClimateShareImageProps>(
       }
       
       // Add future years at 25-year intervals
-      for (let year = birthYear + 25; year <= birthYear + 100; year += 25) {
-        if (year > currentYear) {
-          years.push(year);
+      let futureYear = birthYear + 25;
+      while (futureYear <= birthYear + 75) {
+        if (futureYear > currentYear) {
+          years.push(futureYear);
         }
+        futureYear += 25;
       }
       
       return years.sort((a, b) => a - b);
     };
     
     const timelineYears = generateTimelineYears();
+    
+    // Pre-calculate climate data for each year to use in visualization
+    const climateData = timelineYears.map(year => ({
+      year,
+      data: getClimateDataForYear(year)
+    }));
 
     return (
       <div 
-        ref={ref} 
+        ref={ref}
+        className="climate-share-image" 
         style={{ 
           width: '100%',
           maxWidth: '32rem',
@@ -71,7 +80,7 @@ const ClimateShareImage = forwardRef<HTMLDivElement, ClimateShareImageProps>(
               margin: '0', 
               color: '#d97706'
             }}>
-              From {birthYear} to {new Date().getFullYear() + 80}
+              From {birthYear} to { new Date().getFullYear() + 75 }
             </p>
           </div>
           <div style={{ 
@@ -128,13 +137,16 @@ const ClimateShareImage = forwardRef<HTMLDivElement, ClimateShareImageProps>(
                 <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>300 ppm</span>
               </div>
               
-              {/* Graph area */}
+              {/* Graph area with grid */}
               <div style={{ 
                 position: 'absolute', 
                 left: '2.5rem', 
                 right: '0', 
                 top: '0', 
-                bottom: '2rem'
+                bottom: '2rem',
+                backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                border: '1px solid #e5e7eb',
+                borderRadius: '0.25rem'
               }}>
                 {/* Horizontal grid lines */}
                 <div style={{ 
@@ -145,67 +157,85 @@ const ClimateShareImage = forwardRef<HTMLDivElement, ClimateShareImageProps>(
                   flexDirection: 'column', 
                   justifyContent: 'space-between'
                 }}>
-                  <div style={{ borderTop: '1px solid #e5e7eb', width: '100%' }}></div>
-                  <div style={{ borderTop: '1px solid #e5e7eb', width: '100%' }}></div>
-                  <div style={{ borderTop: '1px solid #e5e7eb', width: '100%' }}></div>
-                  <div style={{ borderTop: '1px solid #e5e7eb', width: '100%' }}></div>
+                  <div style={{ borderTop: '1px dashed #e5e7eb', width: '100%' }}></div>
+                  <div style={{ borderTop: '1px dashed #e5e7eb', width: '100%' }}></div>
+                  <div style={{ borderTop: '1px dashed #e5e7eb', width: '100%' }}></div>
+                  <div style={{ borderTop: '1px dashed #e5e7eb', width: '100%' }}></div>
                 </div>
                 
-                {/* Draw the line using divs for better HTML2Canvas compatibility */}
-                <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-                  {timelineYears.map((year, index) => {
-                    if (index === 0) return null; // Skip first point for connecting lines
-                    
-                    const prevYear = timelineYears[index - 1];
-                    const prevData = getClimateDataForYear(prevYear);
-                    const currentData = getClimateDataForYear(year);
-                    
-                    const startX = ((index - 1) / (timelineYears.length - 1)) * 100;
-                    const endX = (index / (timelineYears.length - 1)) * 100;
-                    
-                    const startY = 100 - ((prevData.co2 - 300) / 350) * 100;
-                    const endY = 100 - ((currentData.co2 - 300) / 350) * 100;
-                    
-                    // Calculate line length and angle for transform
-                    const length = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
-                    const angle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI;
-                    
-                    return (
-                      <div key={index} style={{
-                        position: 'absolute',
-                        left: `${startX}%`,
-                        top: `${startY}%`,
-                        width: `${length}%`,
-                        height: '3px',
-                        backgroundColor: '#D97706',
-                        transformOrigin: '0 0',
-                        transform: `rotate(${angle}deg)`,
-                        zIndex: 2
-                      }}></div>
-                    );
-                  })}
+                {/* Pre-render line segments */}
+                {timelineYears.map((year, index) => {
+                  if (index === 0) return null; // Skip first point for connecting lines
                   
-                  {/* Add dots at each data point */}
-                  {timelineYears.map((year, index) => {
-                    const data = getClimateDataForYear(year);
-                    const x = (index / (timelineYears.length - 1)) * 100;
-                    const y = 100 - ((data.co2 - 300) / 350) * 100;
-                    
-                    return (
-                      <div key={`dot-${index}`} style={{
+                  const prevYear = timelineYears[index - 1];
+                  const prevData = climateData.find(d => d.year === prevYear)?.data;
+                  const currentData = climateData.find(d => d.year === year)?.data;
+                  
+                  if (!prevData || !currentData) return null;
+                  
+                  const segmentWidth = 100 / (timelineYears.length - 1);
+                  const x1 = (index - 1) * segmentWidth;
+                  const x2 = index * segmentWidth;
+                  
+                  // Scale CO2 values to y-coordinates (300-650ppm)
+                  const y1 = 100 - ((prevData.co2 - 300) / 350) * 100;
+                  const y2 = 100 - ((currentData.co2 - 300) / 350) * 100;
+                  
+                  // Create dots at data points
+                  const dotSize = 6;
+                  
+                  return (
+                    <div key={index}>
+                      {/* Line segment */}
+                      <svg style={{
                         position: 'absolute',
-                        left: `${x}%`,
-                        top: `${y}%`,
-                        width: '8px',
-                        height: '8px',
+                        width: '100%',
+                        height: '100%',
+                        left: 0,
+                        top: 0
+                      }}>
+                        <line
+                          x1={`${x1}%`}
+                          y1={`${y1}%`}
+                          x2={`${x2}%`}
+                          y2={`${y2}%`}
+                          stroke="#D97706"
+                          strokeWidth="2"
+                        />
+                      </svg>
+                      
+                      {/* Data point dots */}
+                      <div style={{
+                        position: 'absolute',
+                        left: `${x2}%`,
+                        top: `${y2}%`,
+                        width: `${dotSize}px`,
+                        height: `${dotSize}px`,
                         backgroundColor: '#D97706',
                         borderRadius: '50%',
+                        border: '1px solid white',
                         transform: 'translate(-50%, -50%)',
-                        zIndex: 3
+                        zIndex: 2
                       }}></div>
-                    );
-                  })}
-                </div>
+                    </div>
+                  );
+                })}
+                
+                {/* Explicitly add first dot */}
+                {timelineYears.length > 0 && (
+                  <div style={{
+                    position: 'absolute',
+                    left: '0%',
+                    top: `${100 - ((climateData[0]?.data.co2 - 300) / 350) * 100}%`,
+                    width: '6px',
+                    height: '6px',
+                    backgroundColor: '#D97706',
+                    borderRadius: '50%',
+                    border: '1px solid white',
+                    transform: 'translate(-50%, -50%)',
+                    zIndex: 2
+                  }}></div>
+                )}
               </div>
               
               {/* X-axis labels */}
@@ -214,17 +244,15 @@ const ClimateShareImage = forwardRef<HTMLDivElement, ClimateShareImageProps>(
                 left: '2.5rem', 
                 right: '0', 
                 bottom: '0', 
-                width: 'calc(100% - 2.5rem)', 
-                display: 'flex', 
+                height: '2rem',
+                display: 'flex',
+                alignItems: 'center',
                 justifyContent: 'space-between'
               }}>
                 {timelineYears.map((year, index) => (
                   <div key={index} style={{ 
                     fontSize: '0.75rem', 
-                    color: '#6b7280',
-                    transform: 'translateX(-50%)',
-                    position: 'absolute',
-                    left: `${(index / (timelineYears.length - 1)) * 100}%`
+                    color: '#6b7280'
                   }}>
                     {year}
                   </div>
@@ -233,64 +261,61 @@ const ClimateShareImage = forwardRef<HTMLDivElement, ClimateShareImageProps>(
             </div>
           </div>
           
-          {/* Climate Impacts */}
+          {/* Climate Impact Cards */}
           <div style={{ 
             display: 'grid', 
             gridTemplateColumns: 'repeat(3, 1fr)', 
             gap: '0.75rem',
             marginBottom: '1.5rem'
           }}>
-            {timelineYears.slice(0, 3).map((year, idx) => {
-              const data = getClimateDataForYear(year);
-              return (
-                <div key={idx} style={{ 
-                  backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                  borderRadius: '0.5rem',
-                  padding: '0.75rem'
+            {climateData.slice(0, 3).map((item, idx) => (
+              <div key={idx} style={{ 
+                backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                borderRadius: '0.5rem',
+                padding: '0.75rem'
+              }}>
+                <h5 style={{ 
+                  fontSize: '0.875rem', 
+                  fontWeight: '500', 
+                  color: '#b45309',
+                  margin: '0 0 0.5rem 0'
                 }}>
-                  <h5 style={{ 
-                    fontSize: '0.875rem', 
-                    fontWeight: '500', 
-                    color: '#b45309',
-                    margin: '0 0 0.5rem 0'
+                  {item.year}
+                </h5>
+                <div style={{ fontSize: '0.75rem', marginTop: '0.5rem' }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between',
+                    marginBottom: '0.25rem'
                   }}>
-                    {year}
-                  </h5>
-                  <div style={{ fontSize: '0.75rem', marginTop: '0.5rem' }}>
-                    <div style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between',
-                      marginBottom: '0.25rem'
-                    }}>
-                      <span style={{ color: '#4b5563' }}>CO₂:</span>
-                      <span style={{ fontWeight: '500' }}>{data.co2} ppm</span>
-                    </div>
-                    <div style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between',
-                      marginBottom: '0.25rem'
-                    }}>
-                      <span style={{ color: '#4b5563' }}>Temp:</span>
-                      <span style={{ fontWeight: '500' }}>+{data.temperature.toFixed(1)}°C</span>
-                    </div>
-                    <div style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between'
-                    }}>
-                      <span style={{ color: '#4b5563' }}>Sea Level:</span>
-                      <span style={{ fontWeight: '500' }}>{data.seaLevel} cm</span>
-                    </div>
+                    <span style={{ color: '#4b5563' }}>CO₂:</span>
+                    <span style={{ fontWeight: '500' }}>{item.data.co2} ppm</span>
+                  </div>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between',
+                    marginBottom: '0.25rem'
+                  }}>
+                    <span style={{ color: '#4b5563' }}>Temp:</span>
+                    <span style={{ fontWeight: '500' }}>+{item.data.temperature.toFixed(1)}°C</span>
+                  </div>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between'
+                  }}>
+                    <span style={{ color: '#4b5563' }}>Sea Level:</span>
+                    <span style={{ fontWeight: '500' }}>{item.data.seaLevel} cm</span>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
           
           {/* Call to Action */}
           <div style={{ 
             backgroundColor: '#fef3c7', 
             borderRadius: '0.5rem', 
-            padding: '0.75rem'
+            padding: '1rem'
           }}>
             <h4 style={{ 
               fontSize: '0.875rem', 
@@ -298,15 +323,51 @@ const ClimateShareImage = forwardRef<HTMLDivElement, ClimateShareImageProps>(
               color: '#92400e', 
               margin: '0 0 0.25rem 0'
             }}>
-              Climate Action
+              Climate Action: What You Can Do
             </h4>
             <p style={{ 
               fontSize: '0.75rem', 
               color: '#b45309',
-              margin: '0'
+              margin: '0 0 0.5rem 0'
             }}>
-              Taking action today can help mitigate climate change impacts. Every choice matters for future generations.
+              Taking action today can help mitigate climate change impacts. Small changes add up!
             </p>
+            <div style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '0.5rem'
+            }}>
+              <span style={{
+                fontSize: '0.625rem',
+                backgroundColor: 'white',
+                color: '#92400e',
+                padding: '0.25rem 0.5rem',
+                borderRadius: '9999px',
+                border: '1px solid #fcd34d'
+              }}>
+                Reduce Emissions
+              </span>
+              <span style={{
+                fontSize: '0.625rem',
+                backgroundColor: 'white',
+                color: '#92400e',
+                padding: '0.25rem 0.5rem',
+                borderRadius: '9999px',
+                border: '1px solid #fcd34d'
+              }}>
+                Conserve Energy
+              </span>
+              <span style={{
+                fontSize: '0.625rem',
+                backgroundColor: 'white',
+                color: '#92400e',
+                padding: '0.25rem 0.5rem',
+                borderRadius: '9999px',
+                border: '1px solid #fcd34d'
+              }}>
+                Plant Trees
+              </span>
+            </div>
           </div>
         </div>
         
