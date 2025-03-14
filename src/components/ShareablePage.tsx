@@ -1,6 +1,6 @@
-// Updated ShareablePage.tsx with Combined tab option
+// Updated ShareablePage.tsx with Better Mobile Handling
 import React, { useRef, useState, useEffect } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Smartphone, Camera } from 'lucide-react';
 import { MilestonesData } from './constants/types';
 import { generateImageFromRef } from './utils/imageUtils';
 import MilestoneShareImage from './MilestoneShareImage';
@@ -24,11 +24,23 @@ const ShareablePage: React.FC<ShareablePageProps> = ({
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [shareableUrl, setShareableUrl] = useState<string | null>(null);
   const [generationError, setGenerationError] = useState<string | null>(null);
+  const [isMobileDevice, setIsMobileDevice] = useState<boolean>(false);
   
   // Add ref for combined share image
   const combinedImageRef = useRef<HTMLDivElement>(null);
   const milestonesImageRef = useRef<HTMLDivElement>(null);
   const climateImageRef = useRef<HTMLDivElement>(null);
+
+  // Check if user is on mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobileDevice(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Generate image on component mount
   useEffect(() => {
@@ -62,7 +74,7 @@ const ShareablePage: React.FC<ShareablePageProps> = ({
       }
 
       // First, ensure the ref is properly mounted
-      if (!ref.current) {
+      if (!ref?.current) {
         console.error(`Reference for ${activeTab} image is not available`);
         setGenerationError(`Could not generate ${activeTab} image. Please try again.`);
         return;
@@ -71,10 +83,10 @@ const ShareablePage: React.FC<ShareablePageProps> = ({
       // Start generation
       setIsGenerating(true);
 
-      // Wait a moment for render to complete
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // Wait a moment for render to complete - longer wait on mobile
+      await new Promise(resolve => setTimeout(resolve, isMobileDevice ? 800 : 300));
 
-      // Generate the image URL
+      // Generate the image URL with improved options
       const imageUrl = await generateImageFromRef(ref, setIsGenerating);
 
       // Check if URL was generated
@@ -106,6 +118,19 @@ const ShareablePage: React.FC<ShareablePageProps> = ({
       </header>
 
       <main className="container mx-auto px-4 py-6 max-w-6xl">
+        {/* Mobile-optimized notice for mobile users */}
+        {isMobileDevice && (
+          <div className="bg-indigo-50 rounded-lg p-4 mb-6 flex items-start border border-indigo-100">
+            <Smartphone className="text-indigo-500 mr-3 flex-shrink-0 mt-1" size={20} />
+            <div>
+              <h3 className="font-medium text-indigo-700 mb-1">Mobile-Optimized Sharing</h3>
+              <p className="text-sm text-indigo-600">
+                Your image is optimized for Instagram Stories and WhatsApp Status. Download and share directly from your gallery for best results.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Tab Navigation */}
         <div className="bg-white rounded-lg shadow-sm mb-6">
           <nav className="flex">
@@ -146,9 +171,9 @@ const ShareablePage: React.FC<ShareablePageProps> = ({
           </div>
         )}
 
-        {/* Image Preview */}
-        <div className="flex justify-center mb-8">
-          <div className={`transition-opacity duration-300 ${isGenerating ? 'opacity-50' : 'opacity-100'}`}>
+        {/* Image Preview Container with Mobile-friendly styles */}
+        <div className={`flex justify-center mb-8 ${isMobileDevice ? 'overflow-hidden max-h-[70vh]' : ''}`}>
+          <div className={`transition-opacity duration-300 ${isGenerating ? 'opacity-50' : 'opacity-100'} ${isMobileDevice ? 'transform scale-[0.85]' : ''}`}>
             {activeTab === 'combined' ? (
               /* Combined Image */
               <div className="bg-white p-4 rounded-lg shadow-sm">
@@ -177,6 +202,23 @@ const ShareablePage: React.FC<ShareablePageProps> = ({
             )}
           </div>
         </div>
+
+        {/* Mobile-focused tips - display above controls on mobile */}
+        {isMobileDevice && (
+          <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
+            <div className="flex items-start">
+              <Camera className="text-gray-500 mr-3 flex-shrink-0 mt-1" size={20} />
+              <div>
+                <h3 className="font-medium text-gray-700 mb-1">Best Practices for Mobile</h3>
+                <ul className="text-sm text-gray-600 space-y-1 list-disc ml-5">
+                  <li>For Instagram Stories: Download, open Instagram, tap '+' at top, select 'Story,' and upload</li>
+                  <li>For WhatsApp Status: Download, open WhatsApp, go to 'Status' tab, tap the camera icon</li>
+                  <li>Use download button first, then share from your gallery for best results</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Share Controls */}
         <ShareControls

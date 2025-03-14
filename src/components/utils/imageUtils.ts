@@ -1,8 +1,8 @@
-// imageUtils.ts - Comprehensive solution for reliable image generation
+// imageUtils.ts - Enhanced for mobile sharing
 import html2canvas from 'html2canvas';
 
 /**
- * Generates an image from a React ref with robust error handling and fallbacks
+ * Generates an image from a React ref with robust error handling and mobile optimization
  * @param ref - React ref to the element to convert to image
  * @param setIsGenerating - Optional state setter to track generation status
  * @returns Promise with the image URL or null
@@ -17,11 +17,17 @@ export const generateImageFromRef = async (
   
   try {
     // Give time for all content to fully render and styles to apply
-    await new Promise(resolve => setTimeout(resolve, 800));
+    // Add more wait time on mobile devices
+    const isMobile = window.innerWidth < 768;
+    await new Promise(resolve => setTimeout(resolve, isMobile ? 1000 : 800));
     
-    // Approach 1: Direct capture of the original element
+    // Detect if we need high-DPI rendering
+    const pixelRatio = window.devicePixelRatio || 1;
+    const scale = Math.min(pixelRatio * 1.5, 3); // Cap at 3x for performance reasons
+    
+    // Approach 1: Direct capture with optimized settings
     const canvas = await html2canvas(ref.current, {
-      scale: 2, // Higher quality
+      scale: scale, // Higher quality based on device
       logging: false,
       useCORS: true,
       allowTaint: true,
@@ -31,6 +37,9 @@ export const generateImageFromRef = async (
         return element.tagName === 'IFRAME' || 
                element.classList.contains('no-export');
       },
+      // For mobile, reduce size to improve performance
+      width: isMobile ? ref.current.offsetWidth * 0.9 : ref.current.offsetWidth,
+      height: isMobile ? ref.current.offsetHeight * 0.9 : ref.current.offsetHeight,
       // Critical for SVG rendering
       onclone: (elementClone) => {
         // Fix SVGs by ensuring they have explicit dimensions
@@ -75,13 +84,32 @@ export const generateImageFromRef = async (
             htmlEl.style.backgroundColor = computedStyle.backgroundColor;
           }
         });
+        
+        // Set all text elements to have better rendering
+        const textElements = elementClone.querySelectorAll('p, h1, h2, h3, h4, h5, h6, span, div');
+        textElements.forEach(el => {
+          const htmlEl = el as HTMLElement;
+          // Add a slight shadow to text for better readability on mobile
+          if (!htmlEl.style.textShadow) {
+            htmlEl.style.textRendering = 'optimizeLegibility';
+          }
+        });
       }
     });
     
-    const imageUrl = canvas.toDataURL('image/png');
+    // Optimize image quality for mobile sharing
+    let imageUrl: string;
+    
+    // On mobile, use JPEG for better performance, PNG for desktop
+    const isMobileDevice = window.innerWidth < 768;
+    if (isMobileDevice) {
+      imageUrl = canvas.toDataURL('image/jpeg', 0.95); // High quality JPEG for mobile
+    } else {
+      imageUrl = canvas.toDataURL('image/png'); // PNG for desktop
+    }
     
     // Validate that we got a real image (not blank)
-    if (imageUrl === 'data:,' || imageUrl === 'data:image/png;base64,') {
+    if (imageUrl === 'data:,' || imageUrl === 'data:image/png;base64,' || imageUrl === 'data:image/jpeg;base64,') {
       throw new Error('Generated image is blank');
     }
     
@@ -90,7 +118,7 @@ export const generateImageFromRef = async (
   } catch (error) {
     console.error('Error generating image (primary method):', error);
     
-    // Fallback method - create an off-screen clone and render that
+    // Mobile-optimized fallback method
     try {
       console.log('Attempting fallback capture method...');
       
@@ -110,12 +138,15 @@ export const generateImageFromRef = async (
       clone.style.margin = '0';
       clone.style.border = originalStyle.border;
       clone.style.borderRadius = originalStyle.borderRadius;
+      clone.style.transform = 'none'; // Reset any transforms
+      clone.style.filter = 'none'; // Reset any filters
       
       // Append to body, capture, then remove
       document.body.appendChild(clone);
       
-      // Give browser time to paint the clone
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Give browser time to paint the clone - longer for mobile
+      const isMobile = window.innerWidth < 768;
+      await new Promise(resolve => setTimeout(resolve, isMobile ? 800 : 500));
       
       const canvas = await html2canvas(clone, {
         scale: 2,
@@ -128,73 +159,28 @@ export const generateImageFromRef = async (
       // Remove the clone from DOM
       document.body.removeChild(clone);
       
-      const imageUrl = canvas.toDataURL('image/png');
+      // Choose format based on device
+      let imageUrl: string;
+      if (isMobile) {
+        imageUrl = canvas.toDataURL('image/jpeg', 0.9);
+      } else {
+        imageUrl = canvas.toDataURL('image/png');
+      }
+      
       if (setIsGenerating) setIsGenerating(false);
       return imageUrl;
     } catch (fallbackError) {
       console.error('Fallback capture also failed:', fallbackError);
       
-      // Final fallback - use a different rendering approach
-      try {
-        console.log('Attempting emergency rendering method...');
-        
-        // Create a canvas directly matching the dimensions
-        const element = ref.current;
-        const { width, height } = element.getBoundingClientRect();
-        
-        // Create canvas at 2x for high DPI displays
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        if (!ctx) throw new Error('Could not get canvas context');
-        
-        canvas.width = width * 2;
-        canvas.height = height * 2;
-        ctx.scale(2, 2);
-        
-        // Fill the background
-        const computedStyle = window.getComputedStyle(element);
-        ctx.fillStyle = computedStyle.backgroundColor || 'white';
-        ctx.fillRect(0, 0, width, height);
-        
-        // Render HTML to XML, then to image via SVG
-        // This is a hack but can work when all else fails
-        const data = `
-          <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
-            <foreignObject width="100%" height="100%" x="0" y="0">
-              <div xmlns="http://www.w3.org/1999/xhtml">
-                ${element.outerHTML}
-              </div>
-            </foreignObject>
-          </svg>
-        `;
-        
-        const img = new Image();
-        img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(data);
-        
-        await new Promise((resolve, reject) => {
-          img.onload = resolve;
-          img.onerror = reject;
-          // Set a timeout to avoid hanging
-          setTimeout(resolve, 3000);
-        });
-        
-        // Draw the image to the canvas
-        ctx.drawImage(img, 0, 0, width, height);
-        
-        const imageUrl = canvas.toDataURL('image/png');
-        if (setIsGenerating) setIsGenerating(false);
-        return imageUrl;
-      } catch (emergencyError) {
-        console.error('All capture methods failed:', emergencyError);
-        if (setIsGenerating) setIsGenerating(false);
-        return null;
-      }
+      // Return null and let the UI handle the error
+      if (setIsGenerating) setIsGenerating(false);
+      return null;
     }
   }
 };
 
 /**
- * Downloads an image from a URL with reliable handling
+ * Downloads an image from a URL with mobile-friendly handling
  * @param imageUrl - URL of the image to download
  * @param filename - Filename for the downloaded image
  * @returns Boolean indicating success
@@ -206,7 +192,44 @@ export const downloadImage = (imageUrl: string, filename: string): boolean => {
   }
 
   try {
-    // Create a temporary link element
+    // For mobile devices, use a different approach to download
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      // On mobile, open the image in a new tab which shows browser's native save options
+      const tab = window.open();
+      if (tab) {
+        tab.document.write(`
+          <html>
+            <head>
+              <title>Save Image - TimeLoom</title>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <style>
+                body { margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; background: #f8fafc; }
+                .header { padding: 12px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; }
+                .content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px; }
+                img { max-width: 100%; max-height: 80vh; object-fit: contain; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+                p { margin: 16px 0; font-family: system-ui, sans-serif; color: #4b5563; text-align: center; }
+                .button { background: #4f46e5; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; }
+              </style>
+            </head>
+            <body>
+              <div class="header">
+                <h3 style="margin: 0; color: #4f46e5; font-family: system-ui, sans-serif;">TimeLoom - Save Image</h3>
+              </div>
+              <div class="content">
+                <img src="${imageUrl}" alt="TimeLoom Image" />
+                <p>Press and hold on the image to download<br>Or screenshot this page</p>
+              </div>
+            </body>
+          </html>
+        `);
+        tab.document.close();
+        return true;
+      }
+    }
+    
+    // Desktop approach - use download attribute
     const link = document.createElement('a');
     link.href = imageUrl;
     link.download = filename;
@@ -228,7 +251,7 @@ export const downloadImage = (imageUrl: string, filename: string): boolean => {
 };
 
 /**
- * Share image to social media with improved error handling
+ * Share image to social media with mobile optimizations
  * @param platform - Social media platform
  * @param imageUrl - URL of the image
  * @param shareText - Text to share
@@ -248,6 +271,25 @@ export const shareToSocialMedia = (
   let shareUrl = '';
   
   try {
+    // On mobile, for certain platforms, first try to use Web Share API
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile && navigator.share && (platform === 'whatsapp' || platform === 'instagram')) {
+      // For mobile sharing where direct image sharing is difficult, try native share
+      navigator.share({
+        title: 'My TimeLoom Journey',
+        text: shareText,
+        url: appUrl,
+      }).catch(error => {
+        console.warn('Mobile share failed, falling back to regular share:', error);
+        // Continue with regular sharing methods below
+      });
+      
+      // Return true regardless as we've triggered the share dialog
+      return true;
+    }
+    
+    // Regular sharing URLs as fallback
     switch (platform) {
       case 'twitter':
         shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(appUrl)}`;
@@ -259,16 +301,18 @@ export const shareToSocialMedia = (
         shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + ' ' + appUrl)}`;
         break;
       case 'instagram':
-        // Instagram requires the app and doesn't have a direct web share URL
-        alert('To share on Instagram, please download the image and upload it through the Instagram app.');
+        // Instagram special handling - open a helpful dialog
+        alert('To share on Instagram:\n\n1. Download the image\n2. Open Instagram\n3. Tap + icon at the top\n4. Select the downloaded image\n5. Share to your Story or Feed');
         return true;
     }
     
     // Open in new window with error handling
-    const newWindow = window.open(shareUrl, '_blank');
-    if (!newWindow) {
-      alert('Your browser blocked the popup. Please check your popup settings to share.');
-      return false;
+    if (shareUrl) {
+      const newWindow = window.open(shareUrl, '_blank');
+      if (!newWindow) {
+        alert('Your browser blocked the popup. Please check your popup settings to share.');
+        return false;
+      }
     }
     
     return true;

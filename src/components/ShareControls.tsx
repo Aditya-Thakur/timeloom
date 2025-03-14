@@ -1,6 +1,6 @@
-// Updated ShareControls.tsx to handle the combined option
+// Updated ShareControls.tsx with better mobile handling
 import React, { useState } from 'react';
-import { Download, Instagram, Facebook, Twitter, RefreshCw } from 'lucide-react';
+import { Download, Instagram, Facebook, Twitter, RefreshCw, Share2, Info } from 'lucide-react';
 import { downloadImage, shareToSocialMedia } from './utils/imageUtils';
 
 interface ShareControlsProps {
@@ -19,6 +19,7 @@ const ShareControls: React.FC<ShareControlsProps> = ({
   onTriggerGenerate
 }) => {
   const [error, setError] = useState<string | null>(null);
+  const [showTips, setShowTips] = useState<boolean>(false);
 
   // Handle download with error tracking
   const handleDownload = () => {
@@ -70,7 +71,7 @@ const ShareControls: React.FC<ShareControlsProps> = ({
       shareToSocialMedia(platform, imageUrl, shareText);
     } catch (err) {
       console.error('Share error:', err);
-      setError(`Failed to share to ${platform}. Please try again.`);
+      setError(`Failed to share to ${platform}. Please try downloading and sharing manually.`);
     }
   };
 
@@ -89,14 +90,37 @@ const ShareControls: React.FC<ShareControlsProps> = ({
         </p>
         
         {/* Regenerate button */}
-        <button 
-          onClick={handleRegenerate}
-          className={`mt-2 flex items-center text-sm font-medium ${activeTab === 'combined' ? 'text-purple-600 hover:text-purple-700' : activeTab === 'milestones' ? 'text-indigo-600 hover:text-indigo-700' : 'text-amber-600 hover:text-amber-700'}`}
-        >
-          <RefreshCw size={14} className="mr-1" />
-          Regenerate Image
-        </button>
+        <div className="mt-2 flex items-center justify-between">
+          <button 
+            onClick={handleRegenerate}
+            className={`flex items-center text-sm font-medium ${activeTab === 'combined' ? 'text-purple-600 hover:text-purple-700' : activeTab === 'milestones' ? 'text-indigo-600 hover:text-indigo-700' : 'text-amber-600 hover:text-amber-700'}`}
+          >
+            <RefreshCw size={14} className="mr-1" />
+            Regenerate Image
+          </button>
+          
+          <button 
+            onClick={() => setShowTips(!showTips)}
+            className="flex items-center text-sm font-medium text-gray-600 hover:text-gray-800"
+          >
+            <Info size={14} className="mr-1" />
+            Sharing Tips
+          </button>
+        </div>
       </div>
+      
+      {/* Sharing tips accordion */}
+      {showTips && (
+        <div className="mb-4 p-4 bg-gray-50 rounded-lg text-sm border border-gray-200">
+          <h4 className="font-medium text-gray-700 mb-2">Mobile Sharing Tips</h4>
+          <ul className="list-disc pl-5 text-gray-600 space-y-1">
+            <li>For Instagram Stories: Download the image first, then use Instagram's "Add to Story" feature.</li>
+            <li>For WhatsApp Status: Download the image first, then add it from your gallery.</li>
+            <li>The image is optimized for 9:16 vertical format (mobile screens).</li>
+            <li>Add hashtags like #TimeLoom and #LifeJourney when sharing on social media.</li>
+          </ul>
+        </div>
+      )}
       
       {/* Error message */}
       {error && (
@@ -158,20 +182,61 @@ const ShareControls: React.FC<ShareControlsProps> = ({
         </div>
       )}
       
-      {/* Best practices for sharing */}
-      <div className="mt-6 p-4 rounded-lg border border-gray-200">
-        <h4 className="text-sm font-medium text-gray-700 mb-2">Tips for Sharing</h4>
-        <ul className="text-xs text-gray-600 space-y-1 list-disc pl-4">
-          <li>The Combined View performs best on Instagram and Facebook</li>
-          <li>Add a personal caption when sharing to increase engagement</li>
-          <li>Challenge friends to create their own life journey visualization</li>
-          <li>Tag @TimeLoom so we can feature your share on our accounts</li>
-        </ul>
+      {/* Direct Share Option */}
+      {imageUrl && !isGenerating && (
+        <div className="mt-4 flex justify-center">
+          <button
+            onClick={() => {
+              if (navigator.share) {
+                navigator.share({
+                  title: 'My TimeLoom Journey',
+                  text: `I've lived ${currentDays.toLocaleString()} days! Check out my life journey with TimeLoom.`,
+                  url: window.location.href,
+                }).catch(err => {
+                  console.error('Error sharing:', err);
+                  setError('Native sharing failed. Please use the download option.');
+                });
+              } else {
+                setError('Native sharing not supported on this device. Please use the other options.');
+              }
+            }}
+            className="flex items-center gap-2 py-2 px-4 rounded-md bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700"
+          >
+            <Share2 size={16} />
+            <span className="font-medium">Use Native Share (Mobile)</span>
+          </button>
+        </div>
+      )}
+      
+      {/* Mobile-specific guidance */}
+      <div className="mt-6 p-4 rounded-lg border border-gray-200 bg-gray-50">
+        <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
+          <span className="w-5 h-5 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mr-2 text-xs">i</span>
+          Mobile Sharing Instructions
+        </h4>
+        <div className="flex flex-col gap-3 text-sm text-gray-600">
+          <div className="flex items-start gap-2">
+            <span className="text-indigo-500 font-bold">1.</span>
+            <p>Tap <strong>Download</strong> to save the image to your device</p>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="text-indigo-500 font-bold">2.</span>
+            <p>Open your preferred social media app</p>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="text-indigo-500 font-bold">3.</span>
+            <p>For Instagram: Tap <strong>+</strong> and select the downloaded image for your Story or Post</p>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="text-indigo-500 font-bold">4.</span>
+            <p>For WhatsApp: Go to <strong>Status</strong> tab and select the saved image</p>
+          </div>
+        </div>
       </div>
       
       {/* Additional helper text */}
       <p className="mt-4 text-xs text-gray-500">
-        Note: If the download doesn't work, try clicking "Regenerate Image" first.
+        Note: Image is optimized for mobile viewing. For best results, download and share directly from your device's gallery.
       </p>
     </div>
   );
