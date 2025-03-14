@@ -42,16 +42,6 @@ const FunFactsComponent: React.FC<FunFactsProps> = ({ dateOfBirth, milestoneDays
   // HTTPS-safe method to fetch from Numbers API
   const fetchNumbersApiFact = async (month: number, day: number): Promise<string | null> => {
     try {
-      // Option 1: Use HTTPS version if available
-      try {
-        const response = await fetch(`https://numbersapi.com/${month}/${day}/date`);
-        if (response.ok) {
-          return await response.text();
-        }
-      } catch (error) {
-        console.error("OP 1: Error fetching from Numbers API:", error);
-        // Silently fail and try other methods
-      }
       
       // Option 2: Use a CORS proxy (replace with your actual proxy)
       try {
@@ -63,12 +53,12 @@ const FunFactsComponent: React.FC<FunFactsProps> = ({ dateOfBirth, milestoneDays
           return await response.text();
         }
       } catch (error) {
-        console.error("OP 2: Error fetching from Numbers API:", error);
+        console.error("OP 1: Error fetching from Numbers API:", error);
       }
       
       return null;
     } catch (error) {
-      console.error("OP 3: Error fetching from Numbers API:", error);
+      console.error("OP 2: Error fetching from Numbers API:", error);
       return null;
     }
   };
