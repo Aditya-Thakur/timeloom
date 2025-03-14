@@ -1,4 +1,4 @@
-// ShareControls.tsx - Enhanced component with better error handling
+// Updated ShareControls.tsx to handle the combined option
 import React, { useState } from 'react';
 import { Download, Instagram, Facebook, Twitter, RefreshCw } from 'lucide-react';
 import { downloadImage, shareToSocialMedia } from './utils/imageUtils';
@@ -6,7 +6,7 @@ import { downloadImage, shareToSocialMedia } from './utils/imageUtils';
 interface ShareControlsProps {
   imageUrl: string | null;
   isGenerating: boolean;
-  activeTab: 'milestones' | 'climate';
+  activeTab: 'combined' | 'milestones' | 'climate';
   currentDays: number;
   onTriggerGenerate: () => void;
 }
@@ -52,9 +52,20 @@ const ShareControls: React.FC<ShareControlsProps> = ({
     }
     
     try {
-      const shareText = activeTab === 'milestones' 
-        ? `I've lived ${currentDays.toLocaleString()} days! Check out my life milestones with TimeLoom.`
-        : `Here's how climate has changed throughout my lifetime. Generated with TimeLoom.`;
+      // Get the appropriate share text based on active tab
+      let shareText = '';
+      
+      switch(activeTab) {
+        case 'combined':
+          shareText = `I've lived ${currentDays.toLocaleString()} days! Check out my life journey with TimeLoom - milestones, achievements, and more.`;
+          break;
+        case 'milestones':
+          shareText = `I've lived ${currentDays.toLocaleString()} days! Check out my life milestones with TimeLoom.`;
+          break;
+        case 'climate':
+          shareText = `Here's how climate has changed throughout my lifetime. Generated with TimeLoom.`;
+          break;
+      }
       
       shareToSocialMedia(platform, imageUrl, shareText);
     } catch (err) {
@@ -80,7 +91,7 @@ const ShareControls: React.FC<ShareControlsProps> = ({
         {/* Regenerate button */}
         <button 
           onClick={handleRegenerate}
-          className="mt-2 flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-700"
+          className={`mt-2 flex items-center text-sm font-medium ${activeTab === 'combined' ? 'text-purple-600 hover:text-purple-700' : activeTab === 'milestones' ? 'text-indigo-600 hover:text-indigo-700' : 'text-amber-600 hover:text-amber-700'}`}
         >
           <RefreshCw size={14} className="mr-1" />
           Regenerate Image
@@ -96,7 +107,7 @@ const ShareControls: React.FC<ShareControlsProps> = ({
       
       {isGenerating ? (
         <div className="flex justify-center p-6">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-600"></div>
+          <div className={`animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 ${activeTab === 'combined' ? 'border-purple-600' : activeTab === 'milestones' ? 'border-indigo-600' : 'border-amber-600'}`}></div>
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -146,6 +157,17 @@ const ShareControls: React.FC<ShareControlsProps> = ({
           </button>
         </div>
       )}
+      
+      {/* Best practices for sharing */}
+      <div className="mt-6 p-4 rounded-lg border border-gray-200">
+        <h4 className="text-sm font-medium text-gray-700 mb-2">Tips for Sharing</h4>
+        <ul className="text-xs text-gray-600 space-y-1 list-disc pl-4">
+          <li>The Combined View performs best on Instagram and Facebook</li>
+          <li>Add a personal caption when sharing to increase engagement</li>
+          <li>Challenge friends to create their own life journey visualization</li>
+          <li>Tag @TimeLoom so we can feature your share on our accounts</li>
+        </ul>
+      </div>
       
       {/* Additional helper text */}
       <p className="mt-4 text-xs text-gray-500">

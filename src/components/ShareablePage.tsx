@@ -1,10 +1,11 @@
-// ShareablePage.tsx - Improved implementation for better image generation
+// Updated ShareablePage.tsx with Combined tab option
 import React, { useRef, useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { MilestonesData } from './constants/types';
 import { generateImageFromRef } from './utils/imageUtils';
 import MilestoneShareImage from './MilestoneShareImage';
 import ClimateShareImage from './ClimateShareImage';
+import CombinedShareImage from './CombinedShareImage';
 import ShareControls from './ShareControls';
 
 interface ShareablePageProps {
@@ -18,10 +19,14 @@ const ShareablePage: React.FC<ShareablePageProps> = ({
   dateOfBirth,
   onClose
 }) => {
-  const [activeTab, setActiveTab] = useState<'milestones' | 'climate'>('milestones');
+  // Tab options now include 'combined' as first option
+  const [activeTab, setActiveTab] = useState<'combined' | 'milestones' | 'climate'>('combined');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [shareableUrl, setShareableUrl] = useState<string | null>(null);
   const [generationError, setGenerationError] = useState<string | null>(null);
+  
+  // Add ref for combined share image
+  const combinedImageRef = useRef<HTMLDivElement>(null);
   const milestonesImageRef = useRef<HTMLDivElement>(null);
   const climateImageRef = useRef<HTMLDivElement>(null);
 
@@ -43,7 +48,18 @@ const ShareablePage: React.FC<ShareablePageProps> = ({
 
     try {
       // Get the current ref based on active tab
-      const ref = activeTab === 'milestones' ? milestonesImageRef : climateImageRef;
+      let ref;
+      switch(activeTab) {
+        case 'combined':
+          ref = combinedImageRef;
+          break;
+        case 'milestones':
+          ref = milestonesImageRef;
+          break;
+        case 'climate':
+          ref = climateImageRef;
+          break;
+      }
 
       // First, ensure the ref is properly mounted
       if (!ref.current) {
@@ -94,18 +110,25 @@ const ShareablePage: React.FC<ShareablePageProps> = ({
         <div className="bg-white rounded-lg shadow-sm mb-6">
           <nav className="flex">
             <button
+              onClick={() => setActiveTab('combined')}
+              className={`w-1/3 py-4 px-4 text-center font-medium text-lg transition-colors focus:outline-none
+                ${activeTab === 'combined' ? 'bg-purple-50 text-purple-600 border-b-2 border-purple-600' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              Combined View
+            </button>
+            <button
               onClick={() => setActiveTab('milestones')}
-              className={`w-1/2 py-4 px-4 text-center font-medium text-lg transition-colors focus:outline-none
+              className={`w-1/3 py-4 px-4 text-center font-medium text-lg transition-colors focus:outline-none
                 ${activeTab === 'milestones' ? 'bg-indigo-50 text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
             >
-              Milestones Image
+              Milestones
             </button>
             <button
               onClick={() => setActiveTab('climate')}
-              className={`w-1/2 py-4 px-4 text-center font-medium text-lg transition-colors focus:outline-none
+              className={`w-1/3 py-4 px-4 text-center font-medium text-lg transition-colors focus:outline-none
                 ${activeTab === 'climate' ? 'bg-amber-50 text-amber-600 border-b-2 border-amber-600' : 'text-gray-500 hover:text-gray-700'}`}
             >
-              Climate Impact Image
+              Climate Impact
             </button>
           </nav>
         </div>
@@ -126,7 +149,16 @@ const ShareablePage: React.FC<ShareablePageProps> = ({
         {/* Image Preview */}
         <div className="flex justify-center mb-8">
           <div className={`transition-opacity duration-300 ${isGenerating ? 'opacity-50' : 'opacity-100'}`}>
-            {activeTab === 'milestones' ? (
+            {activeTab === 'combined' ? (
+              /* Combined Image */
+              <div className="bg-white p-4 rounded-lg shadow-sm">
+                <CombinedShareImage
+                  ref={combinedImageRef}
+                  milestones={milestones}
+                  dateOfBirth={dateOfBirth}
+                />
+              </div>
+            ) : activeTab === 'milestones' ? (
               /* Milestone Image */
               <div className="bg-white p-4 rounded-lg shadow-sm">
                 <MilestoneShareImage
@@ -154,6 +186,37 @@ const ShareablePage: React.FC<ShareablePageProps> = ({
           currentDays={milestones.currentDays}
           onTriggerGenerate={generateCurrentImage}
         />
+
+        {/* Description of Each Share Image Type */}
+        <div className="mt-8 bg-white rounded-lg shadow-sm p-6">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">About Your Share Options</h2>
+          
+          <div className="space-y-6">
+            <div className={`p-4 rounded-lg ${activeTab === 'combined' ? 'bg-purple-50 border border-purple-200' : 'bg-gray-50'}`}>
+              <h3 className="font-medium text-purple-700 mb-2">Combined View</h3>
+              <p className="text-gray-700 text-sm">
+                Our most engaging shareable image featuring personal life statistics, milestone badges, inspirational quotes,
+                technological advancements from your lifetime, and a climate change visualization. Perfect for social media!
+              </p>
+            </div>
+            
+            <div className={`p-4 rounded-lg ${activeTab === 'milestones' ? 'bg-indigo-50 border border-indigo-200' : 'bg-gray-50'}`}>
+              <h3 className="font-medium text-indigo-700 mb-2">Milestones Timeline</h3>
+              <p className="text-gray-700 text-sm">
+                A beautiful visualization of your key life milestones, showing both past achievements and future goals
+                on a visually appealing timeline. Great for reflecting on your journey!
+              </p>
+            </div>
+            
+            <div className={`p-4 rounded-lg ${activeTab === 'climate' ? 'bg-amber-50 border border-amber-200' : 'bg-gray-50'}`}>
+              <h3 className="font-medium text-amber-700 mb-2">Climate Impact</h3>
+              <p className="text-gray-700 text-sm">
+                A powerful data visualization showing how climate indicators have changed during your lifetime,
+                with projections for future decades. A thought-provoking image to share with friends!
+              </p>
+            </div>
+          </div>
+        </div>
       </main>
     </div>
   );

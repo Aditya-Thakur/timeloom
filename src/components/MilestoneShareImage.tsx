@@ -1,4 +1,4 @@
-// MilestoneShareImage.tsx - Component for generating milestone share images in 9:16 aspect ratio
+// MilestoneShareImage.tsx - Component for generating milestone share images with fixes
 import { forwardRef, ForwardedRef, useState, useEffect } from 'react';
 import { MilestonesData } from './constants/types';
 
@@ -279,7 +279,7 @@ const MilestoneShareImage = forwardRef<HTMLDivElement, MilestoneShareImageProps>
               ))}
             </div>
 
-            {/* Earth Icon at the bottom of the timeline */}
+            {/* Improved Earth Icon at the bottom of the timeline */}
             <div style={{
               width: '60px',
               height: '60px',
@@ -290,12 +290,19 @@ const MilestoneShareImage = forwardRef<HTMLDivElement, MilestoneShareImageProps>
               alignItems: 'center',
               boxShadow: '0 4px 8px rgba(0, 0, 0, 0.15)',
               position: 'relative',
-              zIndex: 2
+              zIndex: 2,
+              overflow: 'hidden' // Keep the globe contained in the circle
             }}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-                <path d="M2 12h20"></path>
+              {/* More realistic Earth globe SVG */}
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="48" height="48">
+                <circle cx="32" cy="32" r="28" fill="#5DADE2" />
+
+                {/* Continents */}
+                <path d="M18,17 C20,15 26,16 28,18 C30,20 32,21 34,19 C36,17 39,19 38,22 C37,25 40,27 42,25 C44,23 46,25 45,27 C44,29 45,32 48,30 C51,28 52,33 50,35 C48,37 48,40 52,40 C56,40 58,43 55,46 C52,49 48,48 46,46 C44,44 40,45 38,48 C36,51 33,51 31,49 C29,47 26,48 24,50 C22,52 18,51 17,49 C16,47 14,46 12,48 C10,50 8,48 7,46 C6,44 8,42 10,42 C12,42 13,39 11,37 C9,35 12,32 15,33 C18,34 21,32 19,29 C17,26 18,22 16,20 C14,18 16,19 18,17" fill="#2E7D32" />
+                <path d="M41,13 C43,11 46,12 47,14 C48,16 50,17 52,16 C54,15 56,17 55,19 C54,21 56,23 58,21 C60,19 61,22 59,24 C57,26 58,29 61,30 C57,32 56,36 54,38 C52,40 48,38 46,36 C44,34 42,36 40,38 C38,40 34,38 32,35 C30,32 26,33 24,36 C22,39 19,37 18,35 C17,33 15,32 14,34 C13,36 10,35 9,33 C8,31 13,32 18,29 C23,26 25,20 20,18 C15,16 25,17 28,15 C31,13 39,15 41,13" fill="#4CAF50" />
+
+                {/* Soft gloss effect */}
+                <ellipse cx="24" cy="22" rx="18" ry="14" fill="rgba(255,255,255,0.1)" />
               </svg>
             </div>
 
@@ -359,7 +366,9 @@ const MilestoneShareImage = forwardRef<HTMLDivElement, MilestoneShareImageProps>
                     display: 'flex',
                     flexDirection: 'column',
                     overflow: 'hidden',
-                    marginRight: '8px'
+                    marginRight: '8px',
+                    flexGrow: 1, // Allow this div to grow and take available space
+                    maxWidth: '75%' // But limit its maximum width
                   }}>
                     <div style={{
                       fontSize: '12px',
@@ -381,7 +390,10 @@ const MilestoneShareImage = forwardRef<HTMLDivElement, MilestoneShareImageProps>
                       fontSize: '9px',
                       color: '#818cf8',
                       marginTop: '2px',
-                      lineHeight: 1.2
+                      lineHeight: 1.2,
+                      whiteSpace: 'nowrap', // Prevent wrapping
+                      overflow: 'hidden',   // Hide overflow
+                      textOverflow: 'ellipsis' // Add ellipsis if needed
                     }}>
                       {milestone.daysUntil?.toLocaleString()} days from now
                     </div>
@@ -425,7 +437,7 @@ const MilestoneShareImage = forwardRef<HTMLDivElement, MilestoneShareImageProps>
           borderRadius: '8px',
           transform: 'translateY(-2px)' // Adjust for image rendering
         }}>
-          TimeLoom.com
+          timeloom-eta.vercel.app
         </div>
       </div>
     );
