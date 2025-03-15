@@ -80,5 +80,3 @@ export const LifeStageBadge: React.FC<LifeStageBadgeProps> = ({ milestone, index
     </div>
   );
 };
-
-// shareComponents/LifeProgressBar.tsx
