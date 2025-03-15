@@ -1,8 +1,9 @@
-// imageUtils.ts - Comprehensive solution for reliable image generation
+// imageUtils.ts - Simple but reliable approach for image generation
 import html2canvas from 'html2canvas';
 
 /**
- * Generates an image from a React ref with robust error handling and fallbacks
+ * Generates an image from a React ref with a simpler, more reliable approach
+ * 
  * @param ref - React ref to the element to convert to image
  * @param setIsGenerating - Optional state setter to track generation status
  * @returns Promise with the image URL or null
@@ -16,185 +17,59 @@ export const generateImageFromRef = async (
   if (setIsGenerating) setIsGenerating(true);
   
   try {
-    // Give time for all content to fully render and styles to apply
-    await new Promise(resolve => setTimeout(resolve, 800));
+    // First, wait for any animations to complete
+    await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Approach 1: Direct capture of the original element
+    // Simple direct capture approach
     const canvas = await html2canvas(ref.current, {
-      scale: 2, // Higher quality
-      logging: false,
+      scale: 2, // Higher resolution
       useCORS: true,
       allowTaint: true,
       backgroundColor: null,
-      // Important optimization - don't try to render iframes
-      ignoreElements: (element) => {
-        return element.tagName === 'IFRAME' || 
-               element.classList.contains('no-export');
-      },
-      // Critical for SVG rendering
-      onclone: (elementClone) => {
-        // Fix SVGs by ensuring they have explicit dimensions
-        const svgs = elementClone.querySelectorAll('svg');
-        svgs.forEach(svg => {
-          if (!svg.getAttribute('width')) {
-            svg.setAttribute('width', '40');
-          }
-          if (!svg.getAttribute('height')) {
-            svg.setAttribute('height', '40');
-          }
+      logging: false,
+      // Don't worry about scrolling content
+      scrollX: 0,
+      scrollY: 0,
+      // Handle SVGs and other special elements
+      onclone: (documentClone: Document) => {
+        // Find the cloned element in the document clone
+        const clonedElement = documentClone.querySelector(`[data-id="${ref.current?.dataset.id}"]`) 
+          || documentClone.getElementById(ref.current?.id || '')
+          || documentClone.querySelector('[class*="share-image"]');
           
-          // Ensure all paths and elements in SVGs have their styles inline
-          const svgElements = svg.querySelectorAll('*');
-          svgElements.forEach(el => {
-            const computedStyle = window.getComputedStyle(el);
-            
-            // Copy critical SVG styling properties
-            if (computedStyle.fill && el.getAttribute('fill') !== computedStyle.fill) {
-              el.setAttribute('fill', computedStyle.fill);
-            }
-            if (computedStyle.stroke && el.getAttribute('stroke') !== computedStyle.stroke) {
-              el.setAttribute('stroke', computedStyle.stroke);
-            }
-            if (computedStyle.strokeWidth && el.getAttribute('stroke-width') !== computedStyle.strokeWidth) {
-              el.setAttribute('stroke-width', computedStyle.strokeWidth);
-            }
-          });
-        });
+        // If we found the element, ensure it's ready for capture
+        if (clonedElement instanceof HTMLElement) {
+          // Remove transforms and make sure it's visible
+          clonedElement.style.transform = 'none';
+          clonedElement.style.transformOrigin = 'top left';
+          clonedElement.style.visibility = 'visible';
+          clonedElement.style.opacity = '1';
+        }
         
-        // Fix Tailwind-style gradient backgrounds that might not be captured correctly
-        const elementsWithBg = elementClone.querySelectorAll('[class*="bg-"]');
-        elementsWithBg.forEach(el => {
-          const htmlEl = el as HTMLElement;
-          const computedStyle = window.getComputedStyle(htmlEl);
-          
-          // Set explicit background color if it's using a gradient or not set directly
-          if (computedStyle.backgroundImage !== 'none' && !htmlEl.style.backgroundImage) {
-            htmlEl.style.backgroundImage = computedStyle.backgroundImage;
-          }
-          if (computedStyle.backgroundColor && !htmlEl.style.backgroundColor) {
-            htmlEl.style.backgroundColor = computedStyle.backgroundColor;
-          }
+        // Fix SVGs
+        const svgs = documentClone.querySelectorAll('svg');
+        svgs.forEach(svg => {
+          if (!svg.getAttribute('width')) svg.setAttribute('width', '100%');
+          if (!svg.getAttribute('height')) svg.setAttribute('height', '100%');
         });
       }
     });
     
+    // Generate image URL
     const imageUrl = canvas.toDataURL('image/png');
-    
-    // Validate that we got a real image (not blank)
-    if (imageUrl === 'data:,' || imageUrl === 'data:image/png;base64,') {
-      throw new Error('Generated image is blank');
-    }
     
     if (setIsGenerating) setIsGenerating(false);
     return imageUrl;
   } catch (error) {
-    console.error('Error generating image (primary method):', error);
+    console.error('Error generating image:', error);
     
-    // Fallback method - create an off-screen clone and render that
-    try {
-      console.log('Attempting fallback capture method...');
-      
-      // Create an invisible clone of the element
-      const original = ref.current;
-      const clone = original.cloneNode(true) as HTMLElement;
-      
-      // Ensure the clone has the same styling applied
-      const originalStyle = window.getComputedStyle(original);
-      clone.style.position = 'absolute';
-      clone.style.left = '-9999px';
-      clone.style.top = '0';
-      clone.style.width = originalStyle.width;
-      clone.style.height = originalStyle.height;
-      clone.style.backgroundColor = originalStyle.backgroundColor;
-      clone.style.padding = originalStyle.padding;
-      clone.style.margin = '0';
-      clone.style.border = originalStyle.border;
-      clone.style.borderRadius = originalStyle.borderRadius;
-      
-      // Append to body, capture, then remove
-      document.body.appendChild(clone);
-      
-      // Give browser time to paint the clone
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const canvas = await html2canvas(clone, {
-        scale: 2,
-        logging: true, // Enable logging for debugging
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: null
-      });
-      
-      // Remove the clone from DOM
-      document.body.removeChild(clone);
-      
-      const imageUrl = canvas.toDataURL('image/png');
-      if (setIsGenerating) setIsGenerating(false);
-      return imageUrl;
-    } catch (fallbackError) {
-      console.error('Fallback capture also failed:', fallbackError);
-      
-      // Final fallback - use a different rendering approach
-      try {
-        console.log('Attempting emergency rendering method...');
-        
-        // Create a canvas directly matching the dimensions
-        const element = ref.current;
-        const { width, height } = element.getBoundingClientRect();
-        
-        // Create canvas at 2x for high DPI displays
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        if (!ctx) throw new Error('Could not get canvas context');
-        
-        canvas.width = width * 2;
-        canvas.height = height * 2;
-        ctx.scale(2, 2);
-        
-        // Fill the background
-        const computedStyle = window.getComputedStyle(element);
-        ctx.fillStyle = computedStyle.backgroundColor || 'white';
-        ctx.fillRect(0, 0, width, height);
-        
-        // Render HTML to XML, then to image via SVG
-        // This is a hack but can work when all else fails
-        const data = `
-          <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
-            <foreignObject width="100%" height="100%" x="0" y="0">
-              <div xmlns="http://www.w3.org/1999/xhtml">
-                ${element.outerHTML}
-              </div>
-            </foreignObject>
-          </svg>
-        `;
-        
-        const img = new Image();
-        img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(data);
-        
-        await new Promise((resolve, reject) => {
-          img.onload = resolve;
-          img.onerror = reject;
-          // Set a timeout to avoid hanging
-          setTimeout(resolve, 3000);
-        });
-        
-        // Draw the image to the canvas
-        ctx.drawImage(img, 0, 0, width, height);
-        
-        const imageUrl = canvas.toDataURL('image/png');
-        if (setIsGenerating) setIsGenerating(false);
-        return imageUrl;
-      } catch (emergencyError) {
-        console.error('All capture methods failed:', emergencyError);
-        if (setIsGenerating) setIsGenerating(false);
-        return null;
-      }
-    }
+    if (setIsGenerating) setIsGenerating(false);
+    return null;
   }
 };
 
 /**
- * Downloads an image from a URL with reliable handling
+ * Downloads an image from a URL with mobile-friendly handling
  * @param imageUrl - URL of the image to download
  * @param filename - Filename for the downloaded image
  * @returns Boolean indicating success
@@ -206,19 +81,59 @@ export const downloadImage = (imageUrl: string, filename: string): boolean => {
   }
 
   try {
-    // Create a temporary link element
-    const link = document.createElement('a');
-    link.href = imageUrl;
-    link.download = filename;
-    document.body.appendChild(link);
+    // Check if user is on mobile device
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
-    // Trigger the download
-    link.click();
-    
-    // Remove after a short delay
-    setTimeout(() => {
-      document.body.removeChild(link);
-    }, 100);
+    if (isMobile) {
+      // On mobile, open the image in a new tab with instructions
+      const tab = window.open('', '_blank');
+      if (tab) {
+        tab.document.write(`
+          <html>
+            <head>
+              <title>Save Image - TimeLoom</title>
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <style>
+                body { margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; background: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
+                .header { padding: 12px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; }
+                .content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px; overflow: auto; }
+                img { max-width: 100%; max-height: 80vh; object-fit: contain; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+                .instructions { margin: 16px 0; font-family: system-ui, sans-serif; color: #4b5563; text-align: center; max-width: 320px; }
+                .button { background: #4f46e5; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; }
+              </style>
+            </head>
+            <body>
+              <div class="header">
+                <h3 style="margin: 0; color: #4f46e5; font-family: system-ui, sans-serif;">TimeLoom - Save Image</h3>
+              </div>
+              <div class="content">
+                <img src="${imageUrl}" alt="TimeLoom Image" />
+                <div class="instructions">
+                  <p><strong>To save this image:</strong></p>
+                  <p>On iPhone: Press and hold on the image → tap "Save to Photos"</p>
+                  <p>On Android: Press and hold → tap "Download image"</p>
+                  <p>Or take a screenshot of this page</p>
+                </div>
+              </div>
+            </body>
+          </html>
+        `);
+        tab.document.close();
+        return true;
+      }
+    } else {
+      // Desktop approach - use download attribute
+      const link = document.createElement('a');
+      link.href = imageUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Remove after a short delay
+      setTimeout(() => {
+        document.body.removeChild(link);
+      }, 100);
+    }
     
     return true;
   } catch (error) {
@@ -228,7 +143,7 @@ export const downloadImage = (imageUrl: string, filename: string): boolean => {
 };
 
 /**
- * Share image to social media with improved error handling
+ * Share image to social media with mobile optimizations
  * @param platform - Social media platform
  * @param imageUrl - URL of the image
  * @param shareText - Text to share
@@ -248,6 +163,22 @@ export const shareToSocialMedia = (
   let shareUrl = '';
   
   try {
+    // Check if Web Share API is available (most mobile browsers)
+    const canUseWebShare = navigator.share !== undefined;
+    
+    if (canUseWebShare && ['whatsapp', 'instagram'].includes(platform)) {
+      navigator.share({
+        title: 'My TimeLoom Journey',
+        text: shareText,
+        url: appUrl,
+      }).catch(error => {
+        console.warn('Web Share API failed, falling back to regular sharing:', error);
+      });
+      
+      return true;
+    }
+    
+    // For platforms where direct sharing isn't possible, provide guidance or use traditional share links
     switch (platform) {
       case 'twitter':
         shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(appUrl)}`;
@@ -259,16 +190,14 @@ export const shareToSocialMedia = (
         shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + ' ' + appUrl)}`;
         break;
       case 'instagram':
-        // Instagram requires the app and doesn't have a direct web share URL
-        alert('To share on Instagram, please download the image and upload it through the Instagram app.');
+        // Instagram special handling - open a helpful dialog
+        alert('To share on Instagram:\n\n1. Download the image\n2. Open Instagram\n3. Tap + icon at the top\n4. Select the downloaded image\n5. Share to your Story or Feed');
         return true;
     }
     
-    // Open in new window with error handling
-    const newWindow = window.open(shareUrl, '_blank');
-    if (!newWindow) {
-      alert('Your browser blocked the popup. Please check your popup settings to share.');
-      return false;
+    // Open in new window
+    if (shareUrl) {
+      window.open(shareUrl, '_blank');
     }
     
     return true;
