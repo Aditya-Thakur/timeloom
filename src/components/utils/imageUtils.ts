@@ -1,8 +1,8 @@
-// imageUtils.ts - Simple but reliable approach for image generation
+// imageUtils.ts - Simplified but reliable approach
 import html2canvas from 'html2canvas';
 
 /**
- * Generates an image from a React ref with a simpler, more reliable approach
+ * Generates an image from a React ref
  * 
  * @param ref - React ref to the element to convert to image
  * @param setIsGenerating - Optional state setter to track generation status
@@ -17,42 +17,17 @@ export const generateImageFromRef = async (
   if (setIsGenerating) setIsGenerating(true);
   
   try {
-    // First, wait for any animations to complete
+    // First, wait to ensure all rendering is complete
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Simple direct capture approach
+    // Apply a basic but reliable approach
     const canvas = await html2canvas(ref.current, {
-      scale: 2, // Higher resolution
+      scale: 2, // Higher resolution 
       useCORS: true,
       allowTaint: true,
       backgroundColor: null,
-      logging: false,
-      // Don't worry about scrolling content
       scrollX: 0,
-      scrollY: 0,
-      // Handle SVGs and other special elements
-      onclone: (documentClone: Document) => {
-        // Find the cloned element in the document clone
-        const clonedElement = documentClone.querySelector(`[data-id="${ref.current?.dataset.id}"]`) 
-          || documentClone.getElementById(ref.current?.id || '')
-          || documentClone.querySelector('[class*="share-image"]');
-          
-        // If we found the element, ensure it's ready for capture
-        if (clonedElement instanceof HTMLElement) {
-          // Remove transforms and make sure it's visible
-          clonedElement.style.transform = 'none';
-          clonedElement.style.transformOrigin = 'top left';
-          clonedElement.style.visibility = 'visible';
-          clonedElement.style.opacity = '1';
-        }
-        
-        // Fix SVGs
-        const svgs = documentClone.querySelectorAll('svg');
-        svgs.forEach(svg => {
-          if (!svg.getAttribute('width')) svg.setAttribute('width', '100%');
-          if (!svg.getAttribute('height')) svg.setAttribute('height', '100%');
-        });
-      }
+      scrollY: 0
     });
     
     // Generate image URL
@@ -62,7 +37,6 @@ export const generateImageFromRef = async (
     return imageUrl;
   } catch (error) {
     console.error('Error generating image:', error);
-    
     if (setIsGenerating) setIsGenerating(false);
     return null;
   }
